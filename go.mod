@@ -1,4 +1,4 @@
-module gibthub.com/xenobyter/xbsh
+module github.com/xenobyter/xbsh
 
 go 1.13
 
