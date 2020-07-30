@@ -14,8 +14,8 @@ func MainGui() {
 	defer gui.Close()
 
 	gui.Cursor = true
-	maxX, maxY := gui.Size()
-	inputView := Input("inputView", 1, maxY-6, maxX-1, maxY-1, 512)
+
+	inputView := Input("inputView", 4, gui)
 	focus := gocui.ManagerFunc(SetFocus("inputView"))
 	gui.SetManager(inputView, focus)
 

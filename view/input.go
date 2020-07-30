@@ -2,6 +2,7 @@ package view
 
 import (
 	"strings"
+
 	"github.com/jroimartin/gocui"
 
 	"github.com/xenobyter/xbsh/cmd"
@@ -9,29 +10,33 @@ import (
 
 // An InputView represents the main editor view at the bottom
 type InputView struct {
-	name      string
-	x1, y1    int
-	x2, y2    int
-	maxLength int
+	name   string
+	height int
+	gui    *gocui.Gui
 }
 
 // Input returns a pointer to the main editor view
-func Input(name string, x1, y1, x2, y2, maxLength int) *InputView {
-	return &InputView{name: name, x1: x1, y1: y1, x2: x2, y2: y2, maxLength: maxLength}
+func Input(name string, height int, gui *gocui.Gui) *InputView {
+	return &InputView{name: name, height: height, gui: gui}
 }
 
 // Layout implements the layout for Input
 func (i *InputView) Layout(gui *gocui.Gui) error {
-	view, err := gui.SetView(i.name, i.x1, i.y1, i.x2, i.y2)
+	maxX, maxY := gui.Size()
+
+	view, err := gui.SetView(i.name, 1, maxY-i.height-2, maxX-1, maxY-1)
+
+	//Delete Inputview if terminal height too small
+	if maxY<i.height+2 { gui.DeleteView(i.name) }
 	if err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
 		view.Editor = i
 		view.Editable = true
+		view.Title = "Input"
 	}
 	return nil
-	//TODO #1: Handle resizing
 }
 
 // Edit implements the main editor and calls functions for keyhandling
@@ -39,7 +44,7 @@ func (i *InputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.M
 	cx, cy := view.Cursor()
 	ox, _ := view.Origin()
 	maxX, _ := view.Size()
-	limit := ox+maxX*cy+cx-1 > i.maxLength
+	limit := ox+maxX*cy+cx-1 > 512
 	view.Wrap = true
 	switch {
 	case char != 0 && mod == 0 && !limit:
