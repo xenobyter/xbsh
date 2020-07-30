@@ -1,7 +1,10 @@
 package view
 
 import (
+	"strings"
 	"github.com/jroimartin/gocui"
+
+	"github.com/xenobyter/xbsh/cmd"
 )
 
 // An InputView represents the main editor view at the bottom
@@ -28,6 +31,7 @@ func (i *InputView) Layout(gui *gocui.Gui) error {
 		view.Editable = true
 	}
 	return nil
+	//TODO #1: Handle resizing
 }
 
 // Edit implements the main editor and calls functions for keyhandling
@@ -44,7 +48,14 @@ func (i *InputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.M
 		view.EditWrite(' ')
 	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
 		view.EditDelete(true)
-	case key == gocui.KeyArrowDown:
-		view.BgColor = gocui.ColorBlue
+	case key == gocui.KeyEnter:
+		cmdString := trimCmdString(view.Buffer())
+		view.Clear()
+		res := cmd.ParseCmd(cmdString)
+		view.Write(res)
 	}
+}
+
+func trimCmdString(buffer string) string {
+	return strings.TrimSuffix(buffer, "\n")
 }
