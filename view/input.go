@@ -24,7 +24,7 @@ func Input(name string, height int, gui *gocui.Gui) *InputView {
 func (i *InputView) Layout(gui *gocui.Gui) error {
 	maxX, maxY := gui.Size()
 
-	view, err := gui.SetView(i.name, 1, maxY-i.height-2, maxX-1, maxY-1)
+	view, err := gui.SetView(i.name, 0, maxY-i.height-2, maxX-1, maxY-1)
 
 	//Delete Inputview if terminal height too small
 	if maxY<i.height+2 { gui.DeleteView(i.name) }
