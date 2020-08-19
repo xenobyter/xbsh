@@ -56,8 +56,9 @@ func (i *InputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.M
 	case key == gocui.KeyEnter:
 		cmdString := trimCmdString(view.Buffer())
 		view.Clear()
-		res := cmd.ParseCmd(cmdString)
-		view.Write(res)
+		view.SetCursor(0,0)
+		res := cmd.ExecCmd(cmdString)
+		OutputWrite(res)
 	}
 }
 

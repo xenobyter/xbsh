@@ -7,8 +7,8 @@ import (
 	
 )
 
-// ParseCmd takes a string, handles any processing and runs it
-func ParseCmd(cmdString string) []byte {
+// ExecCmd runs cmdString and returns its output
+func ExecCmd(cmdString string) []byte {
 	//store normal stdout
 	oldStdOut := os.Stdout
 
@@ -20,7 +20,7 @@ func ParseCmd(cmdString string) []byte {
 	cmd := exec.Command(cmdString)
 
 	//run it
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = os.Stderr //TODO: #10 redirect Stderr
 	cmd.Stdout = write
 	cmd.Run()
 
