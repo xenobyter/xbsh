@@ -1,14 +1,15 @@
 package cmd
 
 import (
+	"strings"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	
 )
 
-// ExecCmd runs cmdString and returns its output
-func ExecCmd(cmdString string) []byte {
+// ExecCmd runs line and returns its output
+func ExecCmd(line string) []byte {
 	//store normal stdout
 	oldStdOut := os.Stdout
 
@@ -16,8 +17,9 @@ func ExecCmd(cmdString string) []byte {
 	read, write, _ := os.Pipe()
 	os.Stdout = write
 	
+	command, args := parseCmd(line)
 	//handle the command 
-	cmd := exec.Command(cmdString)
+	cmd := exec.Command(command, args...)
 
 	//run it
 	cmd.Stderr = os.Stderr //TODO: #10 redirect Stderr
@@ -30,4 +32,11 @@ func ExecCmd(cmdString string) []byte {
 	os.Stdout = oldStdOut
 
 	return out
+}
+
+func parseCmd(line string) (command string, args []string) {
+	fields := strings.Fields(line)
+	command = fields[0]
+	args = strings.Fields(line)[1:]
+	return
 }
