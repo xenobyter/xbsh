@@ -17,7 +17,7 @@ func ExecCmd(line string) []byte {
 	read, write, _ := os.Pipe()
 	os.Stdout = write
 	
-	command, args := parseCmd(line)
+	command, args := parseCmd(line)  //TODO: #13 handle empty command string
 	//handle the command 
 	cmd := exec.Command(command, args...)
 

@@ -27,9 +27,9 @@ func MainGui() {
 	vInput := Input("vInput", vInputHeight, gui)
 	vOutput := Output("vOutput", vOutputWidth, vInputHeight, gui)
 	vSearch := Search("vSearch", vSearchWidth, vInputHeight, gui)
+	vStatus := StatusBar("vStatus", gui)
 	focus := gocui.ManagerFunc(SetFocus("vInput"))
-	gui.SetManager(vInput, focus, vOutput, vSearch)
-
+	gui.SetManager(vInput, focus, vOutput, vSearch, vStatus)
 	if err := gui.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
 	}
@@ -40,3 +40,4 @@ func MainGui() {
 func quit(gui *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
 }
+
