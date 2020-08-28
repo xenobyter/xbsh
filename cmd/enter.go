@@ -19,12 +19,17 @@ func ExecCmd(line string) []byte {
 	
 	command, args := parseCmd(line)  //TODO: #13 handle empty command string
 	//handle the command 
-	cmd := exec.Command(command, args...)
+	switch command {
+	case "cd":
+		setWorkDir(args[0])
+	default:
+		cmd := exec.Command(command, args...)
+		//run it
+		cmd.Stderr = os.Stderr //TODO: #10 redirect Stderr
+		cmd.Stdout = write
+		cmd.Run()
+	}
 
-	//run it
-	cmd.Stderr = os.Stderr //TODO: #10 redirect Stderr
-	cmd.Stdout = write
-	cmd.Run()
 
 	//finish
 	write.Close()

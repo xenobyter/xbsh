@@ -23,7 +23,6 @@ func TestParseCmd( t *testing.T) {
 	if gotCmd != wantCmd {
 		t.Errorf("got: %v, want: %v", gotCmd, wantCmd)
 	}
-	fmt.Println(gotArgs)
 	if gotArgs[0] != wantArgs[0] {
 		t.Errorf("got: %v, want: %v", gotArgs, wantArgs)
 	}
@@ -34,7 +33,6 @@ func TestParseCmd( t *testing.T) {
 	if gotCmd != wantCmd {
 		t.Errorf("got: %v, want: %v", gotCmd, wantCmd)
 	}
-	fmt.Println(gotArgs)
 	if gotArgs[0] != wantArgs[0] {
 		t.Errorf("got: %v, want: %v", gotArgs, wantArgs)
 	}

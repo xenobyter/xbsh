@@ -37,6 +37,7 @@ func MainGui() {
 		log.Panicln(err)
 	}
 }
+
 func quit(gui *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
 }

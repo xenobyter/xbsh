@@ -34,8 +34,8 @@ func (i *InputView) Layout(gui *gocui.Gui) error {
 		}
 		view.Editor = i
 		view.Editable = true
-		view.Title = "Input"
 	}
+	view.Title = getPrompt()
 	return nil
 }
 
@@ -64,4 +64,8 @@ func (i *InputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.M
 
 func trimCmdString(buffer string) string {
 	return strings.TrimSuffix(buffer, "\n")
+}
+
+func getPrompt() string {
+	return cmd.GetWorkDir() + ":"
 }
