@@ -38,7 +38,6 @@ func (i *StatusBarView) Layout(gui *gocui.Gui) error {
 		}
 		vStatus.Frame = false
 	}
-	go updateStatus(gui)
 	return nil
 }
 

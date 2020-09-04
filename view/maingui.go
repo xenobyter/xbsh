@@ -29,6 +29,10 @@ func MainGui() {
 	vSearch := Search("vSearch", vSearchWidth, vInputHeight, gui)
 	vStatus := StatusBar("vStatus", gui)
 	focus := gocui.ManagerFunc(SetFocus("vInput"))
+	
+	//Start ticker for Statusbar
+	go updateStatus(gui)
+	
 	gui.SetManager(vInput, focus, vOutput, vSearch, vStatus)
 	if err := gui.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
