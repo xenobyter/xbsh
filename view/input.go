@@ -49,6 +49,7 @@ func (i *InputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.M
 	switch {
 	case char != 0 && mod == 0 && !limit:
 		view.EditWrite(char)
+		printDir("/")
 	case key == gocui.KeySpace && !limit:
 		view.EditWrite(' ')
 	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
