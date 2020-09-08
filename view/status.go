@@ -14,19 +14,17 @@ var (
 )
 
 // StatusBarView represents our single status bar
-type StatusBarView struct {
+type tStatusBarView struct {
 	name   string
-	status string
-	gui    *gocui.Gui
 }
 
 // StatusBar returns a pointer to status bar
-func StatusBar(name string, gui *gocui.Gui) *StatusBarView {
-	return &StatusBarView{name: name, gui: gui}
+func vStatusBar(name string) *tStatusBarView {
+	return &tStatusBarView{name: name}
 }
 
 // Layout implements the layout for Statusbar
-func (i *StatusBarView) Layout(gui *gocui.Gui) error {
+func (i *tStatusBarView) Layout(gui *gocui.Gui) error {
 	var err error
 	maxX, maxY := gui.Size()
 
@@ -49,10 +47,9 @@ func updateStatus(gui *gocui.Gui) {
 		case <-done:
 			return
 		case t := <-ticker.C:
-			// t := time.Now()
 
 			gui.Update(func(g *gocui.Gui) error {
-				v, err := g.View("vStatus")
+				v, err := g.View("StatusBar")
 				if err != nil {
 					return err
 				}

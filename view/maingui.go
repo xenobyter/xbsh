@@ -2,17 +2,20 @@ package view
 
 import (
 	"log"
+
 	"github.com/jroimartin/gocui"
 )
 
-const (
-	vInputHeight = 4
-	vSearchWidth = 50
+var (
+	gui            *gocui.Gui
+	vMainView      *tMainView
+	vStatusBarView *tStatusBarView
 )
 
 // MainGui initializes the main gui and calls the views
 func MainGui() {
-	gui, err := gocui.NewGui(gocui.OutputNormal)
+	var err error
+	gui, err = gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -21,19 +24,15 @@ func MainGui() {
 	gui.Highlight = true
 	gui.Cursor = true
 
-	guiWidth,_ := gui.Size()
-	vOutputWidth := guiWidth-vSearchWidth
+	// Initialize views
+	vMainView = vMain("MainView")
+	vStatusBarView = vStatusBar("StatusBar")
+	focus := gocui.ManagerFunc(SetFocus("MainView"))
 
-	vInput := Input("vInput", vInputHeight, gui)
-	vOutput := Output("vOutput", vOutputWidth, vInputHeight, gui)
-	vSearch := Search("vSearch", vSearchWidth, vInputHeight, gui)
-	vStatus := StatusBar("vStatus", gui)
-	focus := gocui.ManagerFunc(SetFocus("vInput"))
-	
 	//Start ticker for Statusbar
 	go updateStatus(gui)
-	
-	gui.SetManager(vInput, focus, vOutput, vSearch, vStatus)
+
+	gui.SetManager(vMainView, focus, vStatusBarView)
 	if err := gui.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
 	}
@@ -45,4 +44,3 @@ func MainGui() {
 func quit(gui *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
 }
-
