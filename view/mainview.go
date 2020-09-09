@@ -53,14 +53,15 @@ func (i *tMainView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.M
 	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
 		view.EditDelete(true)
 	case key == gocui.KeyEnter:
+		cmdString := trimCmdString(view.BufferLines())  
 		view.EditNewLine()
-		cmdString := trimCmdString(view.Buffer())  //TODO: #17 Use view.BufferLines
 		res := cmd.ExecCmd(cmdString)
 		i.printStdOut(res)
 	}
 }
 
-func trimCmdString(buffer string) string {
+func trimCmdString(bufferLines []string) string {
+	buffer := bufferLines[len(bufferLines)-1]
 	//TODO: #18 Trim prompt
 	return strings.TrimSuffix(buffer, "\n")
 }
