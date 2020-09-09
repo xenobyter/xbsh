@@ -11,7 +11,7 @@ import (
 
 type tMainView struct {
 	name, prompt string
-	view *gocui.View
+	view         *gocui.View
 }
 
 func vMain(name string) *tMainView {
@@ -53,16 +53,18 @@ func (i *tMainView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.M
 	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
 		view.EditDelete(true)
 	case key == gocui.KeyEnter:
-		cmdString := trimCmdString(view.BufferLines())  
+		cmdString := trimLine(view.BufferLines())
 		view.EditNewLine()
 		res := cmd.ExecCmd(cmdString)
 		i.printStdOut(res)
 	}
 }
 
-func trimCmdString(bufferLines []string) string {
+func trimLine(bufferLines []string) string {
 	buffer := bufferLines[len(bufferLines)-1]
-	//TODO: #18 Trim prompt
+	if i:= strings.Index(buffer, "$" + "\u202f"); i!=-1 {
+		buffer = buffer[i+4:]
+	}
 	return strings.TrimSuffix(buffer, "\n")
 }
 
@@ -70,7 +72,7 @@ func (i *tMainView) setPrompt() {
 	i.prompt = cmd.GetPrompt()
 	fmt.Fprintf(i.view, i.prompt)
 	x, y := i.view.Cursor()
-	i.view.SetCursor(x+len(i.prompt)+1, y)
+	i.view.SetCursor(x+len(i.prompt)-2, y)
 }
 
 func (i *tMainView) printStdOut(stdout []byte) {

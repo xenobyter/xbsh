@@ -11,5 +11,5 @@ func GetPrompt() string {
 	dir, _ := os.Getwd()
 	host, _ := os.Hostname()
 
-	return user.Username + "@" + host + ":" + dir + "$"
+	return user.Username + "@" + host + ":" + dir + "$" + "\u202f"
 }
