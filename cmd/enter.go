@@ -1,42 +1,46 @@
 package cmd
 
 import (
-	"strings"
 	"io/ioutil"
 	"os"
 	"os/exec"
-	
+	"strings"
 )
 
 // ExecCmd runs line and returns its output
-func ExecCmd(line string) []byte {
-	//store normal stdout
+func ExecCmd(line string) (stdout, stderr []byte) {
+	//store normal stdout/stderr
 	oldStdOut := os.Stdout
+	oldStdErr := os.Stderr
 
 	//setup the Pipe to capture output
-	read, write, _ := os.Pipe()
-	os.Stdout = write
-	
-	command, args := parseCmd(line)  //TODO: #13 handle empty command string
-	//handle the command 
+	rStdOut, wStdOut, _ := os.Pipe()
+	os.Stdout = wStdOut
+	rStdErr, wStdErr, _ := os.Pipe()
+	os.Stderr = wStdErr
+
+	command, args := parseCmd(line) //TODO: #13 handle empty command string
+	//handle the command
 	switch command {
 	case "cd":
 		setWorkDir(args[0])
 	default:
 		cmd := exec.Command(command, args...)
 		//run it
-		cmd.Stderr = os.Stderr //TODO: #10 redirect Stderr
-		cmd.Stdout = write
+		cmd.Stderr = wStdErr
+		cmd.Stdout = wStdOut
 		cmd.Run()
 	}
 
-
 	//finish
-	write.Close()
-	out, _ := ioutil.ReadAll(read)
+	wStdOut.Close()
+	wStdErr.Close()
+	stdout, _ = ioutil.ReadAll(rStdOut)
 	os.Stdout = oldStdOut
+	stderr, _ = ioutil.ReadAll(rStdErr)
+	os.Stderr = oldStdErr
 
-	return out
+	return 
 }
 
 func parseCmd(line string) (command string, args []string) {

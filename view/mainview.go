@@ -55,8 +55,7 @@ func (i *tMainView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.M
 	case key == gocui.KeyEnter:
 		cmdString := trimLine(view.BufferLines())
 		view.EditNewLine()
-		res := cmd.ExecCmd(cmdString)
-		i.printStdOut(res)
+		i.print(cmd.ExecCmd(cmdString))
 	}
 }
 
@@ -75,6 +74,7 @@ func (i *tMainView) setPrompt() {
 	i.view.SetCursor(x+len(i.prompt)-2, y)
 }
 
-func (i *tMainView) printStdOut(stdout []byte) {
+func (i *tMainView) print(stdout, stderr []byte) {
+	i.view.Write(stderr)
 	i.view.Write(stdout)
 }
