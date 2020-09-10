@@ -52,6 +52,8 @@ func (i *tMainView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.M
 		view.EditWrite(' ')
 	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
 		view.EditDelete(true)
+	case key == gocui.KeyF1:
+		vHelpView.toggle()
 	case key == gocui.KeyEnter:
 		cmdString := trimLine(view.BufferLines())
 		view.EditNewLine()

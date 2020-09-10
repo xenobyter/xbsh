@@ -10,6 +10,7 @@ var (
 	gui            *gocui.Gui
 	vMainView      *tMainView
 	vStatusBarView *tStatusBarView
+	vHelpView      *tHelpView
 )
 
 // MainGui initializes the main gui and calls the views
@@ -28,11 +29,12 @@ func MainGui() {
 	vMainView = vMain("MainView")
 	vStatusBarView = vStatusBar("StatusBar")
 	focus := gocui.ManagerFunc(SetFocus("MainView"))
+	vHelpView = vHelp("HelpView")
 
 	//Start ticker for Statusbar
 	go updateStatus(gui)
 
-	gui.SetManager(vMainView, focus, vStatusBarView)
+	gui.SetManager(vMainView, focus, vStatusBarView, vHelpView)
 	if err := gui.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
 	}
