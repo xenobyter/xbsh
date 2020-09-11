@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -19,7 +20,10 @@ func ExecCmd(line string) (stdout, stderr []byte) {
 	rStdErr, wStdErr, _ := os.Pipe()
 	os.Stderr = wStdErr
 
-	command, args := parseCmd(line) //TODO: #13 handle empty command string
+	command, args, err := parseCmd(line) //TODO: #13 handle empty command string
+	if err != nil {
+		return
+	}
 	//handle the command
 	switch command {
 	case "cd":
@@ -40,12 +44,16 @@ func ExecCmd(line string) (stdout, stderr []byte) {
 	stderr, _ = ioutil.ReadAll(rStdErr)
 	os.Stderr = oldStdErr
 
-	return 
+	return
 }
 
-func parseCmd(line string) (command string, args []string) {
-	fields := strings.Fields(line)
-	command = fields[0]
-	args = strings.Fields(line)[1:]
+func parseCmd(line string) (command string, args []string, err error) {
+	if line == "" {
+		err = errors.New("errNoCommand")
+	} else {
+		fields := strings.Fields(line)
+		command = fields[0]
+		args = strings.Fields(line)[1:]
+	}
 	return
 }
