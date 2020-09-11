@@ -10,6 +10,11 @@ import (
 
 // ExecCmd runs line and returns its output
 func ExecCmd(line string) (stdout, stderr []byte) {
+	command, args, err := parseCmd(line) 
+	if err != nil {
+		return
+	}
+
 	//store normal stdout/stderr
 	oldStdOut := os.Stdout
 	oldStdErr := os.Stderr
@@ -20,14 +25,13 @@ func ExecCmd(line string) (stdout, stderr []byte) {
 	rStdErr, wStdErr, _ := os.Pipe()
 	os.Stderr = wStdErr
 
-	command, args, err := parseCmd(line) //TODO: #13 handle empty command string
-	if err != nil {
-		return
-	}
 	//handle the command
 	switch command {
-	case "cd":
-		setWorkDir(args[0])
+	case "cd": //ToDo: #26 Fix panic on cd without arguments
+		if err := os.Chdir(args[0]); err!=nil {
+			stderr = []byte(err.Error() + "\n")
+			return
+		}
 	default:
 		cmd := exec.Command(command, args...)
 		//run it

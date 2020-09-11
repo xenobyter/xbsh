@@ -1,6 +1,7 @@
 package view
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -47,7 +48,7 @@ func (i *tMainView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.M
 	view.Wrap = true
 	switch {
 	case char != 0 && mod == 0 && !limit:
-		view.EditWrite(char)
+		view.EditWrite(char) //ToDo: #27 Edit doesnt work after 3 lines
 	case key == gocui.KeySpace && !limit:
 		view.EditWrite(' ')
 	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
@@ -63,7 +64,7 @@ func (i *tMainView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.M
 
 func trimLine(bufferLines []string) string {
 	buffer := bufferLines[len(bufferLines)-1]
-	if i:= strings.Index(buffer, "$" + "\u202f"); i!=-1 {
+	if i := strings.Index(buffer, "$"+"\u202f"); i != -1 {
 		buffer = buffer[i+4:]
 	}
 	return strings.TrimSuffix(buffer, "\n")
@@ -77,6 +78,18 @@ func (i *tMainView) setPrompt() {
 }
 
 func (i *tMainView) print(stdout, stderr []byte) {
+	lines := countLines(stdout, stderr)
 	i.view.Write(stderr)
 	i.view.Write(stdout)
+	i.view.MoveCursor(0, lines, true)
+	i.setPrompt()
+}
+
+
+func countLines(items ...[]byte) (lines int) {
+	sep := []byte{'\n'}
+	for _,item := range items {
+		lines += bytes.Count(item, sep )
+	}
+	return
 }
