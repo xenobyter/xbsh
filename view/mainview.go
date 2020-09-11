@@ -41,15 +41,11 @@ func (i *tMainView) Layout(gui *gocui.Gui) error {
 
 // Edit implements the main editor and calls functions for keyhandling
 func (i *tMainView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.Modifier) {
-	cx, cy := view.Cursor()
-	ox, _ := view.Origin()
-	maxX, _ := view.Size()
-	limit := ox+maxX*cy+cx-1 > 512
 	view.Wrap = true
 	switch {
-	case char != 0 && mod == 0 && !limit:
-		view.EditWrite(char) //ToDo: #27 Edit doesnt work after 3 lines
-	case key == gocui.KeySpace && !limit:
+	case char != 0 && mod == 0:
+		view.EditWrite(char) 
+	case key == gocui.KeySpace:
 		view.EditWrite(' ')
 	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
 		view.EditDelete(true)
