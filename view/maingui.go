@@ -9,9 +9,12 @@ import (
 var (
 	gui            *gocui.Gui
 	vMainView      *tMainView
+	vInputView     *tInputView
 	vStatusBarView *tStatusBarView
 	vHelpView      *tHelpView
 )
+
+const inputHeight = 4
 
 // MainGui initializes the main gui and calls the views
 func MainGui() {
@@ -24,17 +27,19 @@ func MainGui() {
 
 	gui.Highlight = true
 	gui.Cursor = true
+	_, guiHeight := gui.Size()
 
 	// Initialize views
-	vMainView = vMain("MainView")
+	vMainView = vMain("MainView", guiHeight-inputHeight)
 	vStatusBarView = vStatusBar("StatusBar")
-	focus := gocui.ManagerFunc(SetFocus("MainView"))
+	vInputView = vInput("Inputview", inputHeight)
+	focus := gocui.ManagerFunc(SetFocus("Inputview"))
 	vHelpView = vHelp("HelpView")
 
 	//Start ticker for Statusbar
 	go updateStatus(gui)
 
-	gui.SetManager(vMainView, focus, vStatusBarView, vHelpView)
+	gui.SetManager(vMainView, vInputView, focus, vStatusBarView, vHelpView)
 	if err := gui.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
 	}
