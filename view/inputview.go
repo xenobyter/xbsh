@@ -1,6 +1,7 @@
 package view
 
 import (
+	"unicode/utf8"
 	"fmt"
 	"strings"
 
@@ -80,19 +81,19 @@ func (i *tInputView) setPrompt() {
 	i.prompt = cmd.GetPrompt()
 	fmt.Fprintf(i.view, i.prompt)
 	_, y := i.view.Cursor()
-	i.view.SetCursor(len(i.prompt)-2, y)
+	i.view.SetCursor(utf8.RuneCountInString(i.prompt), y)
 }
 
 
 func (i *tInputView) cursorLeft() {
-	if pos, _ := i.view.Cursor(); pos+2 > len(i.prompt) { //ToDo: #30 Use utf8.RuneCountInString instead of len @xenobyter 
+	if pos, _ := i.view.Cursor(); pos > utf8.RuneCountInString(i.prompt) { 
 		i.view.MoveCursor(-1, 0, true)
 	}
 }
 
 func (i *tInputView) cursorRight() {
-	_, lineLength := i.getLastLine()
-	if pos, _ := i.view.Cursor(); pos +2 < lineLength {
+	_, length := i.getLastLine()
+	if pos, _ := i.view.Cursor(); pos < length {
 		i.view.MoveCursor(1, 0, true)
 	}
 }
@@ -100,11 +101,11 @@ func (i *tInputView) cursorRight() {
 func (i *tInputView) cursorEnd() {
 	_, length := i.getLastLine()
 	x, y := i.view.Cursor()
-	i.view.MoveCursor(length-x-2, y, true)
+	i.view.MoveCursor(length-x, y, true)
 }
 
 func (i *tInputView) getLastLine() (line string, length int) { //ToDo: #31 Get rid of getLastLine and ViewBufferLines
 	line = i.view.ViewBufferLines()[len(i.view.ViewBufferLines())-1]
-	length = len(line)
+	length = utf8.RuneCountInString(line)
 	return
 }
