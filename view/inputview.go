@@ -1,9 +1,9 @@
 package view
 
 import (
-	"unicode/utf8"
 	"fmt"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/jroimartin/gocui"
 
@@ -17,6 +17,11 @@ type tInputView struct {
 	view   *gocui.View
 }
 
+const (
+	ansiPrompt = "\033[0;32m"
+	ansiNormal = "\033[0m"
+)
+
 func vInput(name string, height int) *tInputView {
 	return &tInputView{name: name, height: height}
 }
@@ -27,7 +32,7 @@ func (i *tInputView) Layout(gui *gocui.Gui) error {
 	maxX, maxY := gui.Size()
 
 	i.view, err = gui.SetView(i.name, 0, maxY-i.height-2, maxX-1, maxY-2)
-	if err!=nil {
+	if err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
@@ -62,7 +67,7 @@ func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.
 		i.cursorEnd()
 	case key == gocui.KeyEnter:
 		cmdString := trimLine(view.BufferLines())
-		fmt.Fprintln(vMainView.view, cmd.GetPrompt(), cmdString)
+		fmt.Fprintln(vMainView.view, ansiPrompt+cmd.GetPrompt()+ansiNormal+cmdString)
 		vMainView.print(cmd.ExecCmd(cmdString))
 		i.view.Clear()
 		i.setPrompt()
@@ -79,14 +84,13 @@ func trimLine(bufferLines []string) string {
 
 func (i *tInputView) setPrompt() {
 	i.prompt = cmd.GetPrompt()
-	fmt.Fprintf(i.view, i.prompt)
+	fmt.Fprintf(i.view, ansiPrompt+i.prompt+ansiNormal)
 	_, y := i.view.Cursor()
 	i.view.SetCursor(utf8.RuneCountInString(i.prompt), y)
 }
 
-
 func (i *tInputView) cursorLeft() {
-	if pos, _ := i.view.Cursor(); pos > utf8.RuneCountInString(i.prompt) { 
+	if pos, _ := i.view.Cursor(); pos > utf8.RuneCountInString(i.prompt) {
 		i.view.MoveCursor(-1, 0, true)
 	}
 }
