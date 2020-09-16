@@ -41,7 +41,7 @@ func (i *tInputView) Layout(gui *gocui.Gui) error {
 		//Startup tasks
 		i.view.Editor = i
 		i.view.Editable = true
-		i.view.Autoscroll = true
+		i.view.Autoscroll = true //TODO: #39 #38 Long lines break prompt
 		i.view.Title = i.name
 		i.setPrompt()
 	}

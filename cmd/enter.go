@@ -5,12 +5,13 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"os/user"
 	"strings"
 )
 
 // ExecCmd runs line and returns its output
 func ExecCmd(line string) (stdout, stderr []byte) {
-	command, args, err := parseCmd(line) 
+	command, args, err := parseCmd(line)
 	if err != nil {
 		return
 	}
@@ -27,11 +28,8 @@ func ExecCmd(line string) (stdout, stderr []byte) {
 
 	//handle the command
 	switch command {
-	case "cd": //ToDo: #26 Fix panic on cd without arguments
-		if err := os.Chdir(args[0]); err!=nil {
-			stderr = []byte(err.Error() + "\n")
-			return
-		}
+	case "cd":
+		return changeDir(args)
 	default:
 		cmd := exec.Command(command, args...)
 		//run it
@@ -60,4 +58,22 @@ func parseCmd(line string) (command string, args []string, err error) {
 		args = strings.Fields(line)[1:]
 	}
 	return
+}
+
+func changeDir(args []string) (stdout, stderr []byte) {
+	//cd to homedir when called without argument
+	if len(args) == 0 {
+		usr, _ := user.Current()
+		args = append(args, usr.HomeDir)
+	}
+	//acutally change dir
+	if err := os.Chdir(args[0]); err != nil {
+		stderr = []byte(err.Error() + "\n")
+		return
+	}
+	//prepare stdout
+	dir, _ := os.Getwd()
+	stdout = []byte(dir + "\n")
+	return
+
 }
