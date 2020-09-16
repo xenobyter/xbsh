@@ -69,7 +69,7 @@ func getStatusBarContent(t time.Time, contentLen int) (sContent string) {
 		date   string
 		fillUp int
 	)
-	sContent = "❱❱❱ Help: F1" //ToDo: #23 Remove utf8-chars from status und prompt
+	sContent = ">>> Help: F1" //ToDo: #23 Remove utf8-chars from status und prompt
 	switch f := contentLen - utf8.RuneCountInString(sContent); {
 	case f > 23:
 		date = t.Format("2006-01-02 15:04:05")
@@ -78,9 +78,9 @@ func getStatusBarContent(t time.Time, contentLen int) (sContent string) {
 		date = t.Format("2006-01-02")
 		fillUp = f - 14
 	case f > 4:
-		date = t.Format("2006-01-02")
-		fillUp = f - 14
+		date = ""
+		fillUp = f - 4
 	}
-	sContent += strings.Repeat(" ", fillUp) + date + " ❰❰❰"
+	sContent += strings.Repeat(" ", fillUp) + date + " <<<"
 	return
 }

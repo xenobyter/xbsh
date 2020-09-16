@@ -76,9 +76,10 @@ func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.
 }
 
 func trimLine(bufferLines []string) string {
+	const sep = "$ "
 	buffer := bufferLines[len(bufferLines)-1]
-	if i := strings.Index(buffer, "$"+"\u202f"); i != -1 {
-		buffer = buffer[i+4:]
+	if i := strings.Index(buffer, sep); i != -1 {
+		buffer = buffer[i+len(sep):]
 	}
 	return strings.TrimSuffix(buffer, "\n")
 }

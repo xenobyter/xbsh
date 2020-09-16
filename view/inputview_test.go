@@ -1,6 +1,7 @@
 package view
 
 import (
+	"github.com/xenobyter/xbsh/cmd"
 	"fmt"
 	"testing"
 )
@@ -21,7 +22,8 @@ func TestTrimLine(t *testing.T) {
 	}
 
 	fmt.Println("trimline should cut off the prompt")
-	got = trimLine([]string{"user@host:/home$" + "\u202f" + "run"})
+	got = trimLine([]string{cmd.GetPrompt() + "run"})
+	// got = trimLine([]string{"user@host:/home$" + "\u202f" + "run"})
 	if want != got {
 		t.Errorf("got: %v, want: %v", got, want)
 	}

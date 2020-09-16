@@ -16,25 +16,25 @@ func TestGetStatusBarContent( t *testing.T) {
 	}
 
 	fmt.Println("getStatusBarContent should cut time first if len is too small")
-	wDate := time.Now().Format("2006-01-02") + " ❰❰❰"
+	wDate := time.Now().Format("2006-01-02") + " <<<"
 	c := getStatusBarContent(time.Now(),35)
-	gDate := c[utf8.RuneCountInString(c)-8:]
+	gDate := c[utf8.RuneCountInString(c)-len(wDate):]
 	if wDate != gDate {
 		t.Errorf("got: %v, want: %v", gDate, wDate)
 	}
 
 	fmt.Println("getStatusBarContent should cut date next if len is too small")
-	wDate = " ❰❰❰"
+	wDate = " <<<"
 	c = getStatusBarContent(time.Now(),14)
-	gDate = c[len(c)-10:]
+	gDate = c[len(c)-len(wDate):]
 	if wDate != gDate {
 		t.Errorf("got: %v, want: %v", gDate, wDate)
 	}
 	
 	fmt.Println("getStatusBarContent should behave with very short length")
-	wString := "❰❰❰"
-	c = getStatusBarContent(time.Now(),14)
-	gString := c[len(c)-9:]
+	wString := " <<<"
+	c = getStatusBarContent(time.Now(),17)
+	gString := c[len(c)-len(wDate):]
 	if wString != gString {
 		t.Errorf("got: %v, want: %v", gString, wString)
 	}
