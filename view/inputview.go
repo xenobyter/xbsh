@@ -19,6 +19,7 @@ type tInputView struct {
 
 const (
 	ansiPrompt = "\033[0;32m"
+	ansiStdErr = "\033[0;31m"
 	ansiNormal = "\033[0m"
 )
 
