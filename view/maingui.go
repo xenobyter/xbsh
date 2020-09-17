@@ -27,6 +27,7 @@ func MainGui() {
 
 	gui.Highlight = true
 	gui.Cursor = true
+	gui.Mouse = true
 	_, guiHeight := gui.Size()
 
 	// Initialize views
@@ -43,6 +44,15 @@ func MainGui() {
 	if err := gui.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
 	}
+
+	//Mouse
+	if err := gui.SetKeybinding("MainView", gocui.MouseWheelUp, gocui.ModNone, wheelUp); err != nil {
+		log.Panicln(err)
+	}
+	if err := gui.SetKeybinding("MainView", gocui.MouseWheelDown, gocui.ModNone, wheelDown); err != nil {
+		log.Panicln(err)
+	}
+
 	if err := gui.MainLoop(); err != nil && err != gocui.ErrQuit {
 		log.Panicln(err)
 	}
@@ -50,4 +60,13 @@ func MainGui() {
 
 func quit(gui *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
+}
+
+func wheelUp(gui *gocui.Gui, v *gocui.View) error {
+	vMainView.scrollMain(-1)
+	return nil
+}
+func wheelDown(gui *gocui.Gui, v *gocui.View) error {
+	vMainView.scrollMain(1)
+	return nil
 }

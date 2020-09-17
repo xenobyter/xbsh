@@ -1,8 +1,9 @@
 package view
 
 const helptext = `
+Enter commands:
+Write to InputView and hit <CR>
 
-Someday help may be needed :).
-	   
-For now, simply enter a command and press <CR>.
+MainView:
+Scroll by one line with <ALT>+<UpArrow>/<DownArrow> or Mouse wheel, scroll eight lines with <PageUp>/<PageDown>
 `

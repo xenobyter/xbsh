@@ -27,7 +27,7 @@ func (i *tMainView) Layout(gui *gocui.Gui) error {
 		}
 
 		//Startup tasks
-		i.view.Autoscroll = true
+		i.view.Autoscroll = false
 		i.view.Title = i.name
 	}
 	return nil
@@ -38,4 +38,9 @@ func (i *tMainView) print(stdout, stderr []byte) {
 	i.view.Write(stderr)
 	fmt.Fprint(i.view, ansiNormal)
 	i.view.Write(stdout)
+}
+
+func (i *tMainView)scrollMain(cnt int){
+	x,y := i.view.Origin()
+	i.view.SetOrigin(x,y+cnt)
 }

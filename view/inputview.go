@@ -57,7 +57,7 @@ func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.
 	case key == gocui.KeySpace:
 		view.EditWrite(' ')
 	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
-		view.EditDelete(true)
+		view.EditDelete(true) //TODO: #40 Dont delete the prompt
 	case key == gocui.KeyF1:
 		vHelpView.toggle()
 	case key == gocui.KeyArrowLeft:
@@ -66,6 +66,14 @@ func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.
 		i.cursorRight()
 	case key == gocui.KeyEnd:
 		i.cursorEnd()
+	case key == gocui.KeyArrowUp && mod == gocui.ModAlt:
+		vMainView.scrollMain(-1)
+	case key == gocui.KeyArrowDown && mod == gocui.ModAlt:
+		vMainView.scrollMain(1)
+	case key == gocui.KeyPgup:
+		vMainView.scrollMain(-8)
+	case key == gocui.KeyPgdn:
+		vMainView.scrollMain(8)
 	case key == gocui.KeyEnter:
 		cmdString := trimLine(view.BufferLines())
 		fmt.Fprintln(vMainView.view, ansiPrompt+cmd.GetPrompt()+ansiNormal+cmdString)
@@ -87,8 +95,7 @@ func trimLine(bufferLines []string) string {
 func (i *tInputView) setPrompt() {
 	i.prompt = cmd.GetPrompt()
 	fmt.Fprintf(i.view, ansiPrompt+i.prompt+ansiNormal)
-	_, y := i.view.Cursor()
-	i.view.SetCursor(utf8.RuneCountInString(i.prompt), y)
+	i.view.SetCursor(utf8.RuneCountInString(i.prompt), 0)
 }
 
 func (i *tInputView) cursorLeft() {
