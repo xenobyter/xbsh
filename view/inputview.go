@@ -105,20 +105,16 @@ func (i *tInputView) cursorLeft() {
 }
 
 func (i *tInputView) cursorRight() {
-	_, length := i.getLastLine()
-	if pos, _ := i.view.Cursor(); pos < length {
+	if pos, _ := i.view.Cursor(); pos < i.bufferLength() {
 		i.view.MoveCursor(1, 0, true)
 	}
 }
 
 func (i *tInputView) cursorEnd() {
-	_, length := i.getLastLine()
 	x, y := i.view.Cursor()
-	i.view.MoveCursor(length-x, y, true)
+	i.view.MoveCursor(i.bufferLength()-x, y, true)
 }
 
-func (i *tInputView) getLastLine() (line string, length int) { //ToDo: #31 Get rid of getLastLine and ViewBufferLines
-	line = i.view.ViewBufferLines()[len(i.view.ViewBufferLines())-1]
-	length = utf8.RuneCountInString(line)
-	return
+func (i *tInputView) bufferLength() int {
+	return utf8.RuneCountInString(i.view.ViewBuffer())-1
 }
