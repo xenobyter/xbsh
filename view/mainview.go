@@ -2,25 +2,26 @@ package view
 
 import (
 	"fmt"
+
 	"github.com/jroimartin/gocui"
 )
 
 type tMainView struct {
-	name   string
-	height int
-	view   *gocui.View
+	name        string
+	inputHeight int
+	view        *gocui.View
 }
 
-func vMain(name string, height int) *tMainView {
-	return &tMainView{name: name, height: height}
+func vMain(name string, inputHeight int) *tMainView {
+	return &tMainView{name: name, inputHeight: inputHeight}
 }
 
 // Layout is called every time the GUI is redrawn
 func (i *tMainView) Layout(gui *gocui.Gui) error {
 	var err error
-	maxX, _ := gui.Size() //TODO: #36 Handle resizing of mainview
+	maxX, maxY := gui.Size()
 
-	i.view, err = gui.SetView(i.name, 0, 0, maxX-1, i.height-3)
+	i.view, err = gui.SetView(i.name, 0, 0, maxX-1, maxY-i.inputHeight-3)
 	if err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
@@ -40,7 +41,7 @@ func (i *tMainView) print(stdout, stderr []byte) {
 	i.view.Write(stdout)
 }
 
-func (i *tMainView)scrollMain(cnt int){
-	x,y := i.view.Origin()
-	i.view.SetOrigin(x,y+cnt)
+func (i *tMainView) scrollMain(cnt int) {
+	x, y := i.view.Origin()
+	i.view.SetOrigin(x, y+cnt)
 }

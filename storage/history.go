@@ -8,6 +8,7 @@ func HistoryWrite(cmd string) (id int64) {
 		return
 	}
 	//TODO: #47 check last entry and dont store duplicates
+	//TODO: #48 Trim leading spaces before storing command history
 	stmt, err := db.Prepare("INSERT INTO history(command) VALUES(?)")
 	if err != nil {
 		log.Fatal(err)

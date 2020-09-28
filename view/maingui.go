@@ -28,10 +28,9 @@ func MainGui() {
 	gui.Highlight = true
 	gui.Cursor = true
 	gui.Mouse = true
-	_, guiHeight := gui.Size()
 
 	// Initialize views
-	vMainView = vMain("MainView", guiHeight-inputHeight)
+	vMainView = vMain("MainView", inputHeight)
 	vStatusBarView = vStatusBar("StatusBar")
 	vInputView = vInput("Inputview", inputHeight)
 	focus := gocui.ManagerFunc(SetFocus("Inputview"))
