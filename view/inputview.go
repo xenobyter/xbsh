@@ -64,7 +64,7 @@ func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.
 		i.cursorLeft()
 	case key == gocui.KeyArrowRight:
 		i.cursorRight()
-	case key == gocui.KeyEnd:
+	case key == gocui.KeyEnd: //TODO: #45 Implement gocui.KeyHome
 		i.cursorEnd()
 	case key == gocui.KeyArrowUp && mod == gocui.ModAlt:
 		vMainView.scrollMain(-1)
