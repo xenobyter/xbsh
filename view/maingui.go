@@ -1,6 +1,7 @@
 package view
 
 import (
+	"os"
 	"log"
 
 	"github.com/jroimartin/gocui"
@@ -53,7 +54,9 @@ func MainGui() {
 	}
 
 	if err := gui.MainLoop(); err != nil && err != gocui.ErrQuit {
-		log.Panicln(err)
+		gui.Close()
+		log.Println("Terminal too small for xbsh. Exiting!")
+		os.Exit(1)
 	}
 }
 
