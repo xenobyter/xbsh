@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/xenobyter/xbsh/storage"
 	"errors"
 	"io/ioutil"
 	"os"
@@ -16,7 +15,6 @@ func ExecCmd(line string) (stdout, stderr []byte) {
 	if err != nil {
 		return
 	}
-	storage.HistoryWrite(line)
 
 	//store normal stdout/stderr
 	oldStdOut := os.Stdout

@@ -5,16 +5,19 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/xenobyter/xbsh/storage"
+
 	"github.com/jroimartin/gocui"
 
 	"github.com/xenobyter/xbsh/cmd"
 )
 
 type tInputView struct {
-	name   string
-	height int
-	prompt string
-	view   *gocui.View
+	name       string
+	height     int
+	prompt     string
+	historyPos int64
+	view       *gocui.View
 }
 
 const (
@@ -44,6 +47,7 @@ func (i *tInputView) Layout(gui *gocui.Gui) error {
 		i.view.Autoscroll = true //TODO: #39 #38 Long lines break prompt
 		i.view.Title = i.name
 		i.setPrompt()
+		i.historyPos = storage.GetMaxID()+1
 	}
 	return nil
 }
@@ -57,7 +61,7 @@ func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.
 	case key == gocui.KeySpace:
 		view.EditWrite(' ')
 	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
-		view.EditDelete(true) //TODO: #40 Dont delete the prompt
+		view.EditDelete(true) //TODO: #40 Don't delete the prompt
 	case key == gocui.KeyF1:
 		vHelpView.toggle()
 	case key == gocui.KeyArrowLeft:
@@ -74,10 +78,15 @@ func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.
 		vMainView.scrollMain(-8)
 	case key == gocui.KeyPgdn:
 		vMainView.scrollMain(8)
+	case key == gocui.KeyArrowUp:
+		i.scrollHistory(-1)
+	case key == gocui.KeyArrowDown:
+		i.scrollHistory(1)
 	case key == gocui.KeyEnter:
 		cmdString := trimLine(view.BufferLines())
 		fmt.Fprintln(vMainView.view, ansiPrompt+cmd.GetPrompt()+ansiNormal+cmdString)
 		vMainView.print(cmd.ExecCmd(cmdString))
+		i.historyPos = storage.HistoryWrite(cmdString)+1
 		i.view.Clear()
 		i.setPrompt()
 	}
@@ -116,5 +125,15 @@ func (i *tInputView) cursorEnd() {
 }
 
 func (i *tInputView) bufferLength() int {
-	return utf8.RuneCountInString(i.view.ViewBuffer())-1
+	return utf8.RuneCountInString(i.view.ViewBuffer()) - 1
+}
+
+func (i *tInputView) scrollHistory(inc int64) {
+	var history string
+	history, i.historyPos = storage.HistoryRead(i.historyPos + inc)
+	i.view.Clear()
+	i.setPrompt()
+	fmt.Fprint(i.view, history)
+	i.view.SetCursor(utf8.RuneCountInString(i.prompt+history), 0)
+	return
 }

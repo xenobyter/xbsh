@@ -1,9 +1,10 @@
 package view
 
 import (
-	"github.com/xenobyter/xbsh/cmd"
 	"fmt"
 	"testing"
+
+	"github.com/xenobyter/xbsh/cmd"
 )
 
 func TestTrimLine(t *testing.T) {
