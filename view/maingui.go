@@ -1,21 +1,27 @@
 package view
 
 import (
-	"os"
 	"log"
+	"os"
 
 	"github.com/jroimartin/gocui"
 )
 
 var (
-	gui            *gocui.Gui
+	gui *gocui.Gui
+
 	vMainView      *tMainView
 	vInputView     *tInputView
 	vStatusBarView *tStatusBarView
 	vHelpView      *tHelpView
+	vHistoryView   *tHistoryView
+
+	overlayCoord = map[string]int{"x0": 3, "y0": 2, "x1": -4, "y1": -9}
 )
 
-const inputHeight = 4
+const (
+	inputHeight = 4
+)
 
 // MainGui initializes the main gui and calls the views
 func MainGui() {
@@ -27,29 +33,31 @@ func MainGui() {
 	defer gui.Close()
 
 	gui.Highlight = true
+	gui.SelFgColor = gocui.ColorGreen
 	gui.Cursor = true
 	gui.Mouse = true
 
 	// Initialize views
-	vMainView = vMain("MainView", inputHeight)
-	vStatusBarView = vStatusBar("StatusBar")
-	vInputView = vInput("Inputview", inputHeight)
-	focus := gocui.ManagerFunc(SetFocus("Inputview"))
-	vHelpView = vHelp("HelpView")
+	vMainView = newMainView("Main", inputHeight)
+	vStatusBarView = newStatusBarView("StatusBar")
+	vInputView = newInputView("Input", inputHeight)
+	focus := gocui.ManagerFunc(SetFocus("Input"))
+	vHelpView = newHelpView("Help")
+	vHistoryView = newHistoryView("History")
 
 	//Start ticker for Statusbar
 	go updateStatus(gui)
 
-	gui.SetManager(vMainView, vInputView, focus, vStatusBarView, vHelpView)
+	gui.SetManager(vMainView, vInputView, focus, vStatusBarView, vHelpView, vHistoryView)
 	if err := gui.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
 	}
 
 	//Mouse
-	if err := gui.SetKeybinding("MainView", gocui.MouseWheelUp, gocui.ModNone, wheelUp); err != nil {
+	if err := gui.SetKeybinding("Main", gocui.MouseWheelUp, gocui.ModNone, wheelUp); err != nil {
 		log.Panicln(err)
 	}
-	if err := gui.SetKeybinding("MainView", gocui.MouseWheelDown, gocui.ModNone, wheelDown); err != nil {
+	if err := gui.SetKeybinding("Main", gocui.MouseWheelDown, gocui.ModNone, wheelDown); err != nil {
 		log.Panicln(err)
 	}
 

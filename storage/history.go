@@ -12,11 +12,11 @@ func HistoryWrite(cmd string) (id int64) {
 	}
 	//TODO: #47 check last entry and don't store duplicates
 	//TODO: #48 Trim leading spaces before storing command history
-	stmtHistoryWrite, err := db.Prepare("INSERT INTO history(command) VALUES(?)")
+	stmt, err := db.Prepare("INSERT INTO history(command) VALUES(?)")
 	if err != nil {
 		log.Fatal(err)
 	}
-	res, err := stmtHistoryWrite.Exec(cmd)
+	res, err := stmt.Exec(cmd)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,18 +30,16 @@ func HistoryWrite(cmd string) (id int64) {
 //TODO: #46 Purge old entries from command history
 
 // HistoryRead takes an id and returns the stored command and it's id.
-// It returns the last inserted command and max(id) when called with id < 1
-// It returns an empty string and max(id) when no command is stored for the given id
+// It returns an empty string and max(id)+1 when no command is stored for the given id
 func HistoryRead(id int64) (string, int64) {
 	var cmd string
 	if id == 0 {
-		return "", GetMaxID()+1
-		// id = GetMaxID()
+		return "", GetMaxID() + 1
 	}
-	err := db.QueryRow("select command from history where id = ?", id).Scan(&cmd)
+	err := db.QueryRow("SELECT command FROM history WHERE id = ?", id).Scan(&cmd)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return "", GetMaxID()+1
+			return "", GetMaxID() + 1
 		}
 		log.Fatal(err)
 	}
@@ -50,7 +48,29 @@ func HistoryRead(id int64) (string, int64) {
 
 // GetMaxID returns the id for the last history item
 func GetMaxID() (id int64) {
-	err := db.QueryRow("select MAX(id) from history").Scan(&id)
+	err := db.QueryRow("SELECT MAX(id) FROM history").Scan(&id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return
+}
+
+// HistorySearch takes a string and returns matching commands from history as slice of strings
+func HistorySearch(search string) (res []string) {
+	var cmd string
+	rows, err := db.Query("SELECT command FROM history WHERE command LIKE ? ORDER BY id DESC", "%"+search+"%")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&cmd)
+		if err != nil {
+			log.Fatal(err)
+		}
+		res = append(res, cmd)
+	}
+	err = rows.Err()
 	if err != nil {
 		log.Fatal(err)
 	}

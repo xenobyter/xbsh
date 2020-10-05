@@ -12,7 +12,7 @@ type tMainView struct {
 	view        *gocui.View
 }
 
-func vMain(name string, inputHeight int) *tMainView {
+func newMainView(name string, inputHeight int) *tMainView {
 	return &tMainView{name: name, inputHeight: inputHeight}
 }
 

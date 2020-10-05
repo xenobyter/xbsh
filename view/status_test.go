@@ -17,7 +17,7 @@ func TestGetStatusBarContent( t *testing.T) {
 
 	fmt.Println("getStatusBarContent should cut time first if len is too small")
 	wDate := time.Now().Format("2006-01-02") + " <<<"
-	c := getStatusBarContent(time.Now(),35)
+	c := getStatusBarContent(time.Now(),41)
 	gDate := c[utf8.RuneCountInString(c)-len(wDate):]
 	if wDate != gDate {
 		t.Errorf("got: %v, want: %v", gDate, wDate)

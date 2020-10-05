@@ -12,7 +12,7 @@ type tHelpView struct {
 	visible bool
 }
 
-func vHelp(name string) *tHelpView {
+func newHelpView(name string) *tHelpView {
 	return &tHelpView{name: name, visible: false}
 }
 
@@ -20,7 +20,7 @@ func (i *tHelpView) Layout(gui *gocui.Gui) error {
 	var err error
 	maxX, maxY := gui.Size()
 
-	i.view, err = gui.SetView(i.name, 4, 4, maxX-5, maxY-6)
+	i.view, err = gui.SetView(i.name, overlayCoord["x0"], overlayCoord["y0"], maxX+overlayCoord["x1"], maxY+overlayCoord["y1"])
 	if err != nil {
 		if err != gocui.ErrUnknownView {
 			return err

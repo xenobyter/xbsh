@@ -25,5 +25,5 @@ func GetWorkDir() string {
 
 func setWorkDir(dir string) {
 	workDir = dir
-	os.Chdir(dir) //TODO: #14 Handle wrong directories on cd
+	os.Chdir(dir)
 }

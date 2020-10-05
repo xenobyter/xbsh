@@ -5,19 +5,18 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/xenobyter/xbsh/storage"
-
 	"github.com/jroimartin/gocui"
 
 	"github.com/xenobyter/xbsh/cmd"
+	"github.com/xenobyter/xbsh/storage"
 )
 
 type tInputView struct {
-	name       string
-	height     int
-	prompt     string
-	historyPos int64
-	view       *gocui.View
+	name   string
+	height int
+	prompt string
+	view   *gocui.View
+	hPos   int64
 }
 
 const (
@@ -26,7 +25,7 @@ const (
 	ansiNormal = "\033[0m"
 )
 
-func vInput(name string, height int) *tInputView {
+func newInputView(name string, height int) *tInputView {
 	return &tInputView{name: name, height: height}
 }
 
@@ -47,14 +46,12 @@ func (i *tInputView) Layout(gui *gocui.Gui) error {
 		i.view.Autoscroll = true //TODO: #39 #38 Long lines break prompt
 		i.view.Title = i.name
 		i.setPrompt()
-		i.historyPos = storage.GetMaxID()+1
 	}
 	return nil
 }
 
 // Edit implements the main editor and calls functions for keyhandling
 func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.Modifier) {
-	// view.Wrap = true
 	switch {
 	case char != 0 && mod == 0:
 		view.EditWrite(char)
@@ -62,8 +59,11 @@ func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.
 		view.EditWrite(' ')
 	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
 		view.EditDelete(true) //TODO: #40 Don't delete the prompt
+	//TODO: #50 Handle gocui.KeyDelete
 	case key == gocui.KeyF1:
 		vHelpView.toggle()
+	case key == gocui.KeyF2:
+		vHistoryView.toggle()
 	case key == gocui.KeyArrowLeft:
 		i.cursorLeft()
 	case key == gocui.KeyArrowRight:
@@ -71,24 +71,24 @@ func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.
 	case key == gocui.KeyEnd: //TODO: #45 Implement gocui.KeyHome
 		i.cursorEnd()
 	case key == gocui.KeyArrowUp && mod == gocui.ModAlt:
-		vMainView.scrollMain(-1)
+			vMainView.scrollMain(-1)
 	case key == gocui.KeyArrowDown && mod == gocui.ModAlt:
-		vMainView.scrollMain(1)
+			vMainView.scrollMain(1)
 	case key == gocui.KeyPgup:
-		vMainView.scrollMain(-8)
+		vMainView.scrollMain(-8) 
 	case key == gocui.KeyPgdn:
 		vMainView.scrollMain(8)
 	case key == gocui.KeyArrowUp:
-		i.scrollHistory(-1)
+			i.scrollHistory(-1)
 	case key == gocui.KeyArrowDown:
-		i.scrollHistory(1)
+			i.scrollHistory(1)
 	case key == gocui.KeyEnter:
-		cmdString := trimLine(view.BufferLines())
-		fmt.Fprintln(vMainView.view, ansiPrompt+cmd.GetPrompt()+ansiNormal+cmdString)
-		vMainView.print(cmd.ExecCmd(cmdString))
-		i.historyPos = storage.HistoryWrite(cmdString)+1
-		i.view.Clear()
-		i.setPrompt()
+			cmdString := trimLine(view.BufferLines())
+			fmt.Fprintln(vMainView.view, ansiPrompt+cmd.GetPrompt()+ansiNormal+cmdString)
+			vMainView.print(cmd.ExecCmd(cmdString))
+			go func() {i.hPos = storage.HistoryWrite(cmdString) + 1}()
+			i.view.Clear()
+			i.setPrompt()
 	}
 }
 
@@ -130,7 +130,7 @@ func (i *tInputView) bufferLength() int {
 
 func (i *tInputView) scrollHistory(inc int64) {
 	var history string
-	history, i.historyPos = storage.HistoryRead(i.historyPos + inc)
+	history, i.hPos = storage.HistoryRead(i.hPos + inc)
 	i.view.Clear()
 	i.setPrompt()
 	fmt.Fprint(i.view, history)

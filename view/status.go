@@ -19,7 +19,7 @@ type tStatusBarView struct {
 }
 
 // StatusBar returns a pointer to status bar
-func vStatusBar(name string) *tStatusBarView {
+func newStatusBarView(name string) *tStatusBarView {
 	return &tStatusBarView{name: name}
 }
 
@@ -47,7 +47,7 @@ func updateStatus(gui *gocui.Gui) {
 		case <-done:
 			return
 		case t := <-ticker.C:
-
+			
 			gui.Update(func(g *gocui.Gui) error {
 				v, err := g.View("StatusBar")
 				if err != nil {
@@ -69,7 +69,7 @@ func getStatusBarContent(t time.Time, contentLen int) (sContent string) {
 		date   string
 		fillUp int
 	)
-	sContent = ">>> Help: F1" //ToDo: #23 Remove utf8-chars from status und prompt
+	sContent = ">>> Help: F1 | History: F2" 
 	switch f := contentLen - utf8.RuneCountInString(sContent); {
 	case f > 23:
 		date = t.Format("2006-01-02 15:04:05")
