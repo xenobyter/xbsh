@@ -71,7 +71,7 @@ func TestHistoryRead(t *testing.T) {
 		{"should return \"cmd01\",1 for id=1", args{1}, "cmd01", 1},
 		{"should return \"cmd02\",2 for id=2", args{2}, "cmd02", 2},
 		{"should return \"\",3 for id=0", args{0}, "", 3},
-		{"should return \"\",3 for id=-1", args{-1}, "", 3},
+		{"should return \"\",3 for id=-2", args{-2}, "", 3},
 	}
 
 	//setup

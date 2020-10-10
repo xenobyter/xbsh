@@ -67,7 +67,12 @@ func (i *tHistoryView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocu
 			view.EditDelete(true)
 		}
 		i.search(view.BufferLines()[0][offset:])
-	//TODO: #50 Handle gocui.KeyDelete
+	case key == gocui.KeyDelete:
+		i.resetPos(cx)
+		if cx >= offset && cx < utf8.RuneCountInString(view.BufferLines()[0]) {
+			view.EditDelete(false)
+		}
+		i.search(view.BufferLines()[0][offset:])
 	case key == gocui.KeyF2:
 		i.toggle()
 	case key == gocui.KeyArrowLeft:

@@ -26,7 +26,7 @@ const (
 )
 
 func newInputView(name string, height int) *tInputView {
-	return &tInputView{name: name, height: height}
+	return &tInputView{name: name, height: height, hPos: 0}
 }
 
 // Layout is called every time the GUI is redrawn
@@ -43,7 +43,7 @@ func (i *tInputView) Layout(gui *gocui.Gui) error {
 		//Startup tasks
 		i.view.Editor = i
 		i.view.Editable = true
-		i.view.Autoscroll = true //TODO: #39 #38 Long lines break prompt
+		i.view.Autoscroll = false
 		i.view.Wrap = true
 		i.view.Title = i.name
 		i.setPrompt()
@@ -53,14 +53,24 @@ func (i *tInputView) Layout(gui *gocui.Gui) error {
 
 // Edit implements the main editor and calls functions for keyhandling
 func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.Modifier) { //TODO: #58 Refactor Edit
+	cx, cy := view.Cursor()
+	_, oy := view.Origin()
+	maxX, maxY := view.Size()
+	offset := utf8.RuneCountInString(cmd.GetPrompt())
+	length := utf8.RuneCountInString(i.view.BufferLines()[0])
 	switch {
 	case char != 0 && mod == 0:
 		view.EditWrite(char)
 	case key == gocui.KeySpace:
 		view.EditWrite(' ')
 	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
-		i.delete(true)
-	//TODO: #50 Handle gocui.KeyDelete
+		if cx > offset || cy > 0 || oy > 0 {
+			view.EditDelete(true)
+		}
+	case key == gocui.KeyDelete:
+		if cx >= offset || cy > 0 || oy > 0 {
+			view.EditDelete(false)
+		}
 	case key == gocui.KeyF1:
 		vHelpView.toggle()
 	case key == gocui.KeyF2:
@@ -68,9 +78,13 @@ func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.
 	case key == gocui.KeyArrowLeft:
 		i.cursorLeft()
 	case key == gocui.KeyArrowRight:
-		i.cursorRight()
+		if cx+(maxX+1)*(cy+oy) < length {
+			i.view.MoveCursor(1, 0, true)
+		}
 	case key == gocui.KeyEnd: //TODO: #45 Implement gocui.KeyHome
-		i.cursorEnd()
+		x, y, o := caclulateCursor(length, maxX, maxY)
+		view.SetCursor(x, y)
+		view.SetOrigin(0, o)
 	case key == gocui.KeyArrowUp && mod == gocui.ModAlt:
 		vMainView.scrollMain(-1)
 	case key == gocui.KeyArrowDown && mod == gocui.ModAlt:
@@ -103,37 +117,10 @@ func trimLine(bufferLines []string) string {
 	return strings.TrimSuffix(buffer, "\n")
 }
 
-func (i *tInputView) delete(back bool) {
-	if pos,_:=i.view.Cursor();pos>utf8.RuneCountInString(cmd.GetPrompt()) {
-		i.view.EditDelete(true) 
-	}
-}
-
 func (i *tInputView) setPrompt() {
 	i.prompt = cmd.GetPrompt()
 	fmt.Fprintf(i.view, ansiPrompt+i.prompt+ansiNormal)
 	i.view.SetCursor(utf8.RuneCountInString(i.prompt), 0)
-}
-
-func (i *tInputView) cursorLeft() {
-	if pos, _ := i.view.Cursor(); pos > utf8.RuneCountInString(i.prompt) {
-		i.view.MoveCursor(-1, 0, true)
-	}
-}
-
-func (i *tInputView) cursorRight() {
-	if pos, _ := i.view.Cursor(); pos < i.bufferLength() {
-		i.view.MoveCursor(1, 0, true)
-	}
-}
-
-func (i *tInputView) cursorEnd() {
-	x, y := i.view.Cursor()
-	i.view.MoveCursor(i.bufferLength()-x, y, true)
-}
-
-func (i *tInputView) bufferLength() int {
-	return utf8.RuneCountInString(i.view.ViewBuffer()) - 1
 }
 
 func (i *tInputView) scrollHistory(inc int64) {
@@ -142,6 +129,44 @@ func (i *tInputView) scrollHistory(inc int64) {
 	i.view.Clear()
 	i.setPrompt()
 	fmt.Fprint(i.view, history)
-	i.view.SetCursor(utf8.RuneCountInString(i.prompt+history), 0)
+	mx, my := i.view.Size()
+	length := utf8.RuneCountInString(i.view.BufferLines()[0])
+	cx, cy, oy := caclulateCursor(length, mx, my)
+	i.view.SetCursor(cx, cy)
+	i.view.SetOrigin(0, oy)
 	return
+}
+
+func caclulateCursor(l, mx, my int) (cx, cy, oy int) {
+	lines := l / mx
+	switch {
+	case lines == 0:
+		cx = l
+	case lines < my:
+		cy = lines
+		cx = l - lines*mx
+	case lines >= my:
+		cy = 2
+		oy = lines - my + 1
+		cx = l - lines*mx
+	}
+	return cx, cy, oy
+}
+
+func (i *tInputView) cursorLeft() {
+	cx, cy := i.view.Cursor()
+	mx, _ := i.view.Size()
+	_, oy := i.view.Origin()
+	p := utf8.RuneCountInString(i.prompt)
+	switch {
+	case cy == 0 && oy == 0:
+		if cx > p {
+			i.view.MoveCursor(-1, 0, true)
+		}
+	case cy == 0 && cx == 0 && oy > 0:
+		i.view.SetCursor(mx-10, 0)
+		i.view.SetOrigin(0, oy-1)
+	case cy > 0 || oy > 0:
+		i.view.MoveCursor(-1, 0, true)
+	}
 }

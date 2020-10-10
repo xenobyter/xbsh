@@ -33,8 +33,8 @@ func HistoryWrite(cmd string) (id int64) {
 // It returns an empty string and max(id)+1 when no command is stored for the given id
 func HistoryRead(id int64) (string, int64) {
 	var cmd string
-	if id == 0 {
-		return "", GetMaxID() + 1
+	if id == -1 {
+		id = GetMaxID() 
 	}
 	err := db.QueryRow("SELECT command FROM history WHERE id = ?", id).Scan(&cmd)
 	if err != nil {
