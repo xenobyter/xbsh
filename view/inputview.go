@@ -44,6 +44,7 @@ func (i *tInputView) Layout(gui *gocui.Gui) error {
 		i.view.Editor = i
 		i.view.Editable = true
 		i.view.Autoscroll = true //TODO: #39 #38 Long lines break prompt
+		i.view.Wrap = true
 		i.view.Title = i.name
 		i.setPrompt()
 	}
@@ -71,24 +72,25 @@ func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.
 	case key == gocui.KeyEnd: //TODO: #45 Implement gocui.KeyHome
 		i.cursorEnd()
 	case key == gocui.KeyArrowUp && mod == gocui.ModAlt:
-			vMainView.scrollMain(-1)
+		vMainView.scrollMain(-1)
 	case key == gocui.KeyArrowDown && mod == gocui.ModAlt:
-			vMainView.scrollMain(1)
+		vMainView.scrollMain(1)
 	case key == gocui.KeyPgup:
-		vMainView.scrollMain(-8) 
+		vMainView.scrollMain(-8)
 	case key == gocui.KeyPgdn:
 		vMainView.scrollMain(8)
 	case key == gocui.KeyArrowUp:
-			i.scrollHistory(-1)
+		i.scrollHistory(-1)
 	case key == gocui.KeyArrowDown:
-			i.scrollHistory(1)
+		i.scrollHistory(1)
 	case key == gocui.KeyEnter:
-			cmdString := trimLine(view.BufferLines())
-			fmt.Fprintln(vMainView.view, ansiPrompt+cmd.GetPrompt()+ansiNormal+cmdString)
-			vMainView.print(cmd.ExecCmd(cmdString))
-			go func() {i.hPos = storage.HistoryWrite(cmdString) + 1}()
-			i.view.Clear()
-			i.setPrompt()
+		cmdString := trimLine(view.BufferLines())
+		fmt.Fprintln(vMainView.view, ansiPrompt+cmd.GetPrompt()+ansiNormal+cmdString)
+		vMainView.print(cmd.ExecCmd(cmdString))
+		go func() { i.hPos = storage.HistoryWrite(cmdString) + 1 }()
+		i.view.Clear()
+		i.view.SetOrigin(0, 0)
+		i.setPrompt()
 	}
 }
 
