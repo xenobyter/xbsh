@@ -52,14 +52,14 @@ func (i *tInputView) Layout(gui *gocui.Gui) error {
 }
 
 // Edit implements the main editor and calls functions for keyhandling
-func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.Modifier) {
+func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.Modifier) { //TODO: #58 Refactor Edit
 	switch {
 	case char != 0 && mod == 0:
 		view.EditWrite(char)
 	case key == gocui.KeySpace:
 		view.EditWrite(' ')
 	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
-		view.EditDelete(true) //TODO: #40 Don't delete the prompt
+		i.delete(true)
 	//TODO: #50 Handle gocui.KeyDelete
 	case key == gocui.KeyF1:
 		vHelpView.toggle()
@@ -101,6 +101,12 @@ func trimLine(bufferLines []string) string {
 		buffer = buffer[i+len(sep):]
 	}
 	return strings.TrimSuffix(buffer, "\n")
+}
+
+func (i *tInputView) delete(back bool) {
+	if pos,_:=i.view.Cursor();pos>utf8.RuneCountInString(cmd.GetPrompt()) {
+		i.view.EditDelete(true) 
+	}
 }
 
 func (i *tInputView) setPrompt() {
