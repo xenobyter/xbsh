@@ -83,8 +83,11 @@ func (i *tHistoryView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocu
 		if cx < len(view.BufferLines()[0]) {
 			view.MoveCursor(1, 0, true)
 		}
-	case key == gocui.KeyEnd: //TODO: #45 Implement gocui.KeyHome
+	case key == gocui.KeyEnd: 
 		view.SetCursor(len(view.BufferLines()[0]), 0)
+	case key==gocui.KeyHome:
+		view.SetOrigin(0,0)
+		view.SetCursor(offset,0)
 	case key == gocui.KeyPgup:
 		if oy > 8 {
 			view.SetOrigin(ox, oy-8)

@@ -55,7 +55,7 @@ func (i *tInputView) Layout(gui *gocui.Gui) error {
 func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.Modifier) { //TODO: #58 Refactor Edit
 	cx, cy := view.Cursor()
 	_, oy := view.Origin()
-	maxX, maxY := view.Size()
+	mx, my := view.Size()
 	offset := utf8.RuneCountInString(cmd.GetPrompt())
 	length := utf8.RuneCountInString(i.view.BufferLines()[0])
 	switch {
@@ -78,13 +78,16 @@ func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.
 	case key == gocui.KeyArrowLeft:
 		i.cursorLeft()
 	case key == gocui.KeyArrowRight:
-		if cx+(maxX+1)*(cy+oy) < length {
+		if cx+(mx+1)*(cy+oy) < length {
 			i.view.MoveCursor(1, 0, true)
 		}
-	case key == gocui.KeyEnd: //TODO: #45 Implement gocui.KeyHome
-		x, y, o := caclulateCursor(length, maxX, maxY)
+	case key == gocui.KeyEnd:
+		x, y, o := caclulateCursor(length, mx, my)
 		view.SetCursor(x, y)
 		view.SetOrigin(0, o)
+	case key == gocui.KeyHome:
+		view.SetOrigin(0, 0)
+		view.SetCursor(offset, 0)
 	case key == gocui.KeyArrowUp && mod == gocui.ModAlt:
 		vMainView.scrollMain(-1)
 	case key == gocui.KeyArrowDown && mod == gocui.ModAlt:
@@ -146,7 +149,7 @@ func caclulateCursor(l, mx, my int) (cx, cy, oy int) {
 		cy = lines
 		cx = l - lines*mx
 	case lines >= my:
-		cy = 2
+		cy = my - 1
 		oy = lines - my + 1
 		cx = l - lines*mx
 	}
