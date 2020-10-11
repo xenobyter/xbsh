@@ -38,6 +38,7 @@ func Test_GetMaxID(t *testing.T) {
 		name   string
 		wantID int64
 	}{
+		{"empty db, return 0", 0},
 		{"should return 2", 2},
 	}
 
@@ -45,10 +46,12 @@ func Test_GetMaxID(t *testing.T) {
 	dir := tempDirHelper()
 	defer os.RemoveAll(dir)
 	db, _ = openDB(dir + "/" + "test.sqlite")
-	HistoryWrite("cmd01")
-	HistoryWrite("cmd02")
-
-	for _, tt := range tests {
+	
+	for i, tt := range tests {
+		if i==1 {
+			HistoryWrite("cmd01")
+			HistoryWrite("cmd02")
+		}
 		t.Run(tt.name, func(t *testing.T) {
 			if gotID := GetMaxID(); gotID != tt.wantID {
 				t.Errorf("GetMaxID() = %v, want %v", gotID, tt.wantID)
@@ -67,6 +70,7 @@ func TestHistoryRead(t *testing.T) {
 		want  string
 		want1 int64
 	}{
+		{"should return \"\",1 when called on empty db", args{0}, "", 1},
 		{"should return \"\",3 for id=3", args{3}, "", 3},
 		{"should return \"cmd01\",1 for id=1", args{1}, "cmd01", 1},
 		{"should return \"cmd02\",2 for id=2", args{2}, "cmd02", 2},
@@ -78,10 +82,13 @@ func TestHistoryRead(t *testing.T) {
 	dir := tempDirHelper()
 	defer os.RemoveAll(dir)
 	db, _ = openDB(dir + "/" + "test.sqlite")
-	HistoryWrite("cmd01")
-	HistoryWrite("cmd02")
-
-	for _, tt := range tests {
+	
+	for i, tt := range tests {
+		if i==1 {
+			//only first test with empty db
+			HistoryWrite("cmd01")
+			HistoryWrite("cmd02")
+		}
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := HistoryRead(tt.args.id)
 			if got != tt.want {

@@ -50,7 +50,7 @@ func HistoryRead(id int64) (string, int64) {
 func GetMaxID() (id int64) {
 	err := db.QueryRow("SELECT MAX(id) FROM history").Scan(&id)
 	if err != nil {
-		log.Fatal(err)
+		return 0
 	}
 	return
 }
