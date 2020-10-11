@@ -39,9 +39,18 @@ func (i *tMainView) print(stdout, stderr []byte) {
 	i.view.Write(stderr)
 	fmt.Fprint(i.view, ansiNormal)
 	i.view.Write(stdout)
+
+	//reposition origin if needed
+	l := len(i.view.BufferLines())
+	_, y := i.view.Size()
+	if l > y {
+		i.view.SetOrigin(0, l-y-1)
+	}
 }
 
 func (i *tMainView) scrollMain(cnt int) {
 	x, y := i.view.Origin()
 	i.view.SetOrigin(x, y+cnt)
 }
+
+//TODO: #60 MainView Clearing
