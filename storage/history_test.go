@@ -39,7 +39,8 @@ func Test_GetMaxID(t *testing.T) {
 		wantID int64
 	}{
 		{"empty db, return 0", 0},
-		{"should return 2", 2},
+		{"2 command written, should return 2", 2},
+		{"last command written again, should still return 2", 2},
 	}
 
 	//setup
@@ -48,8 +49,11 @@ func Test_GetMaxID(t *testing.T) {
 	db, _ = openDB(dir + "/" + "test.sqlite")
 	
 	for i, tt := range tests {
-		if i==1 {
+		switch i{
+		case 1:
 			HistoryWrite("cmd01")
+			HistoryWrite("cmd02")
+		case 2:
 			HistoryWrite("cmd02")
 		}
 		t.Run(tt.name, func(t *testing.T) {

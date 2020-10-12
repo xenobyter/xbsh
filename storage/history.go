@@ -7,10 +7,9 @@ import (
 
 //HistoryWrite takes a command as string and stores it. HistoryWrite returns the id for the stored command.
 func HistoryWrite(cmd string) (id int64) {
-	if len(cmd) == 0 {
+	if lastCmd, _ := HistoryRead(-1); len(cmd) == 0 || cmd == lastCmd {
 		return
 	}
-	//TODO: #47 check last entry and don't store duplicates
 	//TODO: #48 Trim leading spaces before storing command history
 	stmt, err := db.Prepare("INSERT INTO history(command) VALUES(?)")
 	if err != nil {
@@ -34,7 +33,7 @@ func HistoryWrite(cmd string) (id int64) {
 func HistoryRead(id int64) (string, int64) {
 	var cmd string
 	if id == -1 {
-		id = GetMaxID() 
+		id = GetMaxID()
 	}
 	err := db.QueryRow("SELECT command FROM history WHERE id = ?", id).Scan(&cmd)
 	if err != nil {

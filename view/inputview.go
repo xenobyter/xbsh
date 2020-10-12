@@ -52,7 +52,7 @@ func (i *tInputView) Layout(gui *gocui.Gui) error {
 }
 
 // Edit implements the main editor and calls functions for keyhandling
-func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.Modifier) { //TODO: #58 Refactor Edit
+func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.Modifier) {
 	cx, cy := view.Cursor()
 	_, oy := view.Origin()
 	mx, my := view.Size()
