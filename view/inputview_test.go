@@ -1,32 +1,28 @@
 package view
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/xenobyter/xbsh/cmd"
 )
 
-func TestTrimLine(t *testing.T) {
-	fmt.Println("trimLine should delete \\n at the end")
-	want := "test"
-	got := trimLine([]string{"test\n"})
-	if want != got {
-		t.Errorf("got: %v, want: %v", got, want)
+func Test_trimLine(t *testing.T) {
+	tests := []struct {
+		name string
+		bufferLines []string
+		want string
+	}{
+		{"should delete \\n at the end", []string{"test\n"},"test"},
+		{"shouldn't delete another char at the end", []string{"run"},"run"},
+		{"should cut off the prompt", []string{cmd.GetPrompt() + "run"},"run"},
+		{"should trim leading blanks", []string{cmd.GetPrompt() + "  run"},"run"},
 	}
-
-	fmt.Println("trimLine shouldn't delete another char at the end")
-	want = "run"
-	got = trimLine([]string{"run"})
-	if want != got {
-		t.Errorf("got: %v, want: %v", got, want)
-	}
-
-	fmt.Println("trimline should cut off the prompt")
-	got = trimLine([]string{cmd.GetPrompt() + "run"})
-	// got = trimLine([]string{"user@host:/home$" + "\u202f" + "run"})
-	if want != got {
-		t.Errorf("got: %v, want: %v", got, want)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := trimLine(tt.bufferLines); got != tt.want {
+				t.Errorf("trimLine() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 
@@ -43,9 +39,9 @@ func Test_caclulateCursor(t *testing.T) {
 		wantCy int
 		wantOy int
 	}{
-		{"line 1", args{10,20,3},10,0,0},
-		{"line 2", args{21,20,3},1,1,0},
-		{"line 4", args{81,20,3},1,2,2},
+		{"line 1", args{10, 20, 3}, 10, 0, 0},
+		{"line 2", args{21, 20, 3}, 1, 1, 0},
+		{"line 4", args{81, 20, 3}, 1, 2, 2},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

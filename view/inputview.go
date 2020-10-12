@@ -117,6 +117,7 @@ func trimLine(bufferLines []string) string {
 	if i := strings.Index(buffer, sep); i != -1 {
 		buffer = buffer[i+len(sep):]
 	}
+	buffer = strings.TrimSpace(buffer)
 	return strings.TrimSuffix(buffer, "\n")
 }
 

@@ -15,8 +15,9 @@ func TestHistoryWrite(t *testing.T) {
 		cmd    string
 		wantID int64
 	}{
-		{"should return 1 on first insert", "testing", 1},
-		{"should return 2 on second insert", "testing", 2},
+		{"should return 1 on first insert", "testing1", 1},
+		{"should return 2 on second insert", "testing2", 2},
+		{"should return 0 on consecutive duplicate", "testing2", 0},
 		{"should return 0 on empty insert", "", 0},
 	}
 	//setup
