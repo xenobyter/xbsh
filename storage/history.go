@@ -10,7 +10,6 @@ func HistoryWrite(cmd string) (id int64) {
 	if lastCmd, _ := HistoryRead(-1); len(cmd) == 0 || cmd == lastCmd {
 		return
 	}
-	//TODO: #48 Trim leading spaces before storing command history
 	stmt, err := db.Prepare("INSERT INTO history(command) VALUES(?)")
 	if err != nil {
 		log.Fatal(err)

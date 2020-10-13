@@ -83,11 +83,11 @@ func (i *tHistoryView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocu
 		if cx < len(view.BufferLines()[0]) {
 			view.MoveCursor(1, 0, true)
 		}
-	case key == gocui.KeyEnd: 
+	case key == gocui.KeyEnd:
 		view.SetCursor(len(view.BufferLines()[0]), 0)
-	case key==gocui.KeyHome:
-		view.SetOrigin(0,0)
-		view.SetCursor(offset,0)
+	case key == gocui.KeyHome:
+		view.SetOrigin(0, 0)
+		view.SetCursor(offset, 0)
 	case key == gocui.KeyPgup:
 		if oy > 8 {
 			view.SetOrigin(ox, oy-8)
@@ -129,8 +129,8 @@ func (i *tHistoryView) toggle() {
 	i.visible = !i.visible
 	//Trigger initial search
 	if i.visible {
+		srch := trimLine(vInputView.view.BufferLines())
 		go func() {
-			srch := trimLine(vInputView.view.BufferLines())
 			i.search(srch)
 			i.view.SetCursor(8+utf8.RuneCountInString(srch), 0)
 		}()

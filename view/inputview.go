@@ -100,6 +100,8 @@ func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.
 		i.scrollHistory(-1)
 	case key == gocui.KeyArrowDown:
 		i.scrollHistory(1)
+	case key == gocui.KeyTab:
+		i.tabComplete()
 	case key == gocui.KeyEnter:
 		cmdString := trimLine(view.BufferLines())
 		fmt.Fprintln(vMainView.view, ansiPrompt+cmd.GetPrompt()+ansiNormal+cmdString)
@@ -109,16 +111,6 @@ func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.
 		i.view.SetOrigin(0, 0)
 		i.setPrompt()
 	}
-}
-
-func trimLine(bufferLines []string) string {
-	const sep = "$ "
-	buffer := bufferLines[len(bufferLines)-1]
-	if i := strings.Index(buffer, sep); i != -1 {
-		buffer = buffer[i+len(sep):]
-	}
-	buffer = strings.TrimSpace(buffer)
-	return strings.TrimSuffix(buffer, "\n")
 }
 
 func (i *tInputView) setPrompt() {
@@ -141,22 +133,6 @@ func (i *tInputView) scrollHistory(inc int64) {
 	return
 }
 
-func caclulateCursor(l, mx, my int) (cx, cy, oy int) {
-	lines := l / mx
-	switch {
-	case lines == 0:
-		cx = l
-	case lines < my:
-		cy = lines
-		cx = l - lines*mx
-	case lines >= my:
-		cy = my - 1
-		oy = lines - my + 1
-		cx = l - lines*mx
-	}
-	return cx, cy, oy
-}
-
 func (i *tInputView) cursorLeft() {
 	cx, cy := i.view.Cursor()
 	mx, _ := i.view.Size()
@@ -173,4 +149,82 @@ func (i *tInputView) cursorLeft() {
 	case cy > 0 || oy > 0:
 		i.view.MoveCursor(-1, 0, true)
 	}
+}
+
+func (i *tInputView) tabComplete() {
+	item, path := splitCmd(i.view.Buffer())
+	complete := storage.WorkDirSearch(item, path)
+	fmt.Fprintln(i.view, complete)
+}
+
+//trimLine cuts off any non-command parts from input
+//it returns the command only
+func trimLine(bufferLines []string) string {
+	const sep = "$ "
+	buffer := bufferLines[len(bufferLines)-1]
+	if i := strings.Index(buffer, sep); i != -1 {
+		buffer = buffer[i+len(sep):]
+	}
+	buffer = strings.TrimSpace(buffer)
+	return strings.TrimSuffix(buffer, "\n")
+}
+
+//caclulateCursor takes the length of a string and x/y dimensions of a view
+//it returns the cursors x/y and origins y to position the cursor in the
+//last line
+func caclulateCursor(l, mx, my int) (cx, cy, oy int) {
+	lines := l / mx
+	switch {
+	case lines == 0:
+		cx = l
+	case lines < my:
+		cy = lines
+		cx = l - lines*mx
+	case lines >= my:
+		cy = my - 1
+		oy = lines - my + 1
+		cx = l - lines*mx
+	}
+	return cx, cy, oy
+}
+
+// splitCmd takes the input buffer and returns the path and the item for completion
+// item is the word following the last item seperator witout any path
+// path is either the workdir or an absolut path from the item
+func splitCmd(cmd string) (item, path string) {
+	var itemSep = []string{" "} //TODO: #63 Add itemSep to config management
+	var pathSep = []string{"/"} //TODO: #64 Add pathSep to config management
+	var iStart, pStart, pEnd int
+
+	cmd = strings.TrimSuffix(cmd, "\n")
+	iStart = findLastSep(cmd, itemSep) + 1
+	switch {
+	case cmd == "":
+		return
+	case iStart == len(cmd):
+		//prompt only
+		pStart, pEnd = strings.Index(cmd, ":")+1, strings.Index(cmd, "$ ")+1
+	case cmd[iStart] == '/':
+		pStart = iStart
+		pEnd = findLastSep(cmd, pathSep) + 1
+		iStart = pEnd
+	case len(cmd) >= iStart+2 && cmd[iStart:iStart+2] == "./":
+		iStart += 2
+		pStart, pEnd = strings.Index(cmd, ":")+1, strings.Index(cmd, "$ ")+1
+	default:
+		pStart, pEnd = strings.Index(cmd, ":")+1, strings.Index(cmd, "$ ")+1
+	}
+
+	path = cmd[pStart : pEnd-1]
+	item = cmd[iStart:]
+	return
+}
+
+func findLastSep(str string, sep []string) (max int) {
+	for _, s := range sep {
+		if i := strings.LastIndex(str, s); i > max {
+			max = i
+		}
+	}
+	return
 }

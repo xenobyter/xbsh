@@ -37,8 +37,14 @@ func openDB(dbPath string) (db *sql.DB, err error) {
 		return
 	}
 
+	db.SetMaxOpenConns(1)
+	db.Exec("PRAGMA journal_mode=WAL")
+
 	//create inital tables
-	sqlStmt := "CREATE TABLE IF NOT EXISTS history (id INTEGER not null primary key, command TEXT);"
+	sqlStmt := `
+		CREATE TABLE IF NOT EXISTS history (id INTEGER not null primary key, command TEXT);
+		CREATE INDEX IF NOT EXISTS idx_history_command ON history (command);
+		CREATE TABLE IF NOT EXISTS workdir (item TEXT, path TEXT, mode INTEGER, isdir INTEGER);`
 	_, err = db.Exec(sqlStmt)
 	return
 }
