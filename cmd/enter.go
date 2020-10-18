@@ -74,6 +74,7 @@ func changeDir(args []string) (stdout, stderr []byte) {
 	//prepare stdout
 	dir, _ := os.Getwd()
 	stdout = []byte(dir + "\n")
+
 	return
 
 }

@@ -10,11 +10,12 @@ import (
 var (
 	gui *gocui.Gui
 
-	vMainView      *tMainView
-	vInputView     *tInputView
-	vStatusBarView *tStatusBarView
-	vHelpView      *tHelpView
-	vHistoryView   *tHistoryView
+	vMainView       *tMainView
+	vInputView      *tInputView
+	vStatusBarView  *tStatusBarView
+	vHelpView       *tHelpView
+	vHistoryView    *tHistoryView
+	vCompletionView *tCompletionView
 
 	overlayCoord = map[string]int{"x0": 3, "y0": 2, "x1": -4, "y1": -9}
 )
@@ -26,7 +27,7 @@ const (
 // MainGui initializes the main gui and calls the views
 func MainGui() {
 	var err error
-	gui, err = gocui.NewGui(gocui.OutputNormal)
+	gui, err = gocui.NewGui(gocui.Output256)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -36,6 +37,7 @@ func MainGui() {
 	gui.SelFgColor = gocui.ColorGreen
 	gui.Cursor = true
 	gui.Mouse = true
+	gui.InputEsc = true
 
 	// Initialize views
 	vMainView = newMainView("Main", inputHeight)
@@ -44,11 +46,12 @@ func MainGui() {
 	focus := gocui.ManagerFunc(SetFocus("Input"))
 	vHelpView = newHelpView("Help")
 	vHistoryView = newHistoryView("History")
+	vCompletionView = newCompletionView("Completion")
 
 	//Start ticker for Statusbar
 	go updateStatus(gui)
 
-	gui.SetManager(vMainView, vInputView, focus, vStatusBarView, vHelpView, vHistoryView)
+	gui.SetManager(vMainView, vInputView, focus, vStatusBarView, vHelpView, vHistoryView, vCompletionView)
 	if err := gui.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
 	}

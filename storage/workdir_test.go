@@ -166,6 +166,7 @@ func Test_skipPath(t *testing.T) {
 		{"skip .cache last", "/home/.cache", true},
 		{"skip .cache with trailing /", "/home/.cache/", true},
 		{"don't skip cache", "/home/cache", false},
+		{"skip node_modules", "/home/node_modules", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

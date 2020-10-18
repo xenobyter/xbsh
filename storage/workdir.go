@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-var skipList = []string{".*/.git\\b", ".*/.cache\\b"} //TODO: #62 Add skipList to Config Management
+var skipList = []string{".*/.git\\b", ".*/.cache\\b", ".*/node_modules\\b"} //TODO: #62 Add skipList to Config Management
 
 func skipPath(path string) bool {
 	for _, s := range skipList {
@@ -29,11 +29,8 @@ func WorkDirScan(root string) error {
 	if _, err := db.Exec("DELETE FROM workdir"); err != nil {
 		return err
 	}
-	tx, err := db.Begin()
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -44,24 +41,22 @@ func WorkDirScan(root string) error {
 			if lastSlash := strings.LastIndex(path, "/"); lastSlash != -1 {
 				p := path[0:lastSlash]
 				i := path[lastSlash+1:]
-				_, err = tx.Exec("INSERT INTO workdir(item, path, mode, isdir) VALUES(?,?,?,?)", i, p, info.Mode().Perm(), info.IsDir())
+				_, err = db.Exec("INSERT INTO workdir(item, path, mode, isdir) VALUES(?,?,?,?)", i, p, info.Mode().Perm(), info.IsDir())
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		tx.Rollback()
-	} else {
-		tx.Commit()
+		log.Fatal(err)
 	}
 	return nil
 }
 
 //WorkDirCacheItem represents one cached item
 type WorkDirCacheItem struct {
-	item, path string
+	Item, path string
 	mode       int
-	isDir      bool
+	IsDir      bool
 }
 
 //WorkDirSearch takes a search string and returns a slice of matching WorkDirCacheItem
@@ -73,7 +68,7 @@ func WorkDirSearch(item, path string) (items []WorkDirCacheItem) {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		err := rows.Scan(&wdcItem.item, &wdcItem.path, &wdcItem.mode, &wdcItem.isDir)
+		err := rows.Scan(&wdcItem.Item, &wdcItem.path, &wdcItem.mode, &wdcItem.IsDir)
 		if err != nil {
 			log.Fatal(err)
 		}

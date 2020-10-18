@@ -55,7 +55,7 @@ func (i *tInputView) Layout(gui *gocui.Gui) error {
 func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.Modifier) {
 	cx, cy := view.Cursor()
 	_, oy := view.Origin()
-	mx, my := view.Size()
+	mx, _ := view.Size()
 	offset := utf8.RuneCountInString(cmd.GetPrompt())
 	length := utf8.RuneCountInString(i.view.BufferLines()[0])
 	switch {
@@ -82,9 +82,7 @@ func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.
 			i.view.MoveCursor(1, 0, true)
 		}
 	case key == gocui.KeyEnd:
-		x, y, o := caclulateCursor(length, mx, my)
-		view.SetCursor(x, y)
-		view.SetOrigin(0, o)
+		i.positionEnd()
 	case key == gocui.KeyHome:
 		view.SetOrigin(0, 0)
 		view.SetCursor(offset, 0)
@@ -101,7 +99,7 @@ func (i *tInputView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.
 	case key == gocui.KeyArrowDown:
 		i.scrollHistory(1)
 	case key == gocui.KeyTab:
-		i.tabComplete()
+		go i.tabComplete()
 	case key == gocui.KeyEnter:
 		cmdString := trimLine(view.BufferLines())
 		fmt.Fprintln(vMainView.view, ansiPrompt+cmd.GetPrompt()+ansiNormal+cmdString)
@@ -127,7 +125,7 @@ func (i *tInputView) scrollHistory(inc int64) {
 	fmt.Fprint(i.view, history)
 	mx, my := i.view.Size()
 	length := utf8.RuneCountInString(i.view.BufferLines()[0])
-	cx, cy, oy := caclulateCursor(length, mx, my)
+	cx, cy, oy := calculateCursor(length, mx, my)
 	i.view.SetCursor(cx, cy)
 	i.view.SetOrigin(0, oy)
 	return
@@ -153,8 +151,28 @@ func (i *tInputView) cursorLeft() {
 
 func (i *tInputView) tabComplete() {
 	item, path := splitCmd(i.view.Buffer())
-	complete := storage.WorkDirSearch(item, path)
-	fmt.Fprintln(i.view, complete)
+	vCompletionView.itemLength = len(item)
+	vCompletionView.completions = completionSearch(item, path)
+	switch len(vCompletionView.completions) {
+	case 0:
+		return
+	case 1:
+		fmt.Fprint(i.view, vCompletionView.completions[0].Name()[vCompletionView.itemLength:])
+		if vCompletionView.completions[0].IsDir() {
+			fmt.Fprint(i.view, "/")
+		}
+		i.positionEnd()
+	default:
+		vCompletionView.toggle()
+	}
+}
+
+func (i *tInputView) positionEnd() {
+	mx, my := i.view.Size()
+	l := len(i.view.Buffer()) - 1
+	x, y, o := calculateCursor(l, mx, my)
+	i.view.SetCursor(x, y)
+	i.view.SetOrigin(0, o)
 }
 
 //trimLine cuts off any non-command parts from input
@@ -169,10 +187,10 @@ func trimLine(bufferLines []string) string {
 	return strings.TrimSuffix(buffer, "\n")
 }
 
-//caclulateCursor takes the length of a string and x/y dimensions of a view
+//calculateCursor takes the length of a string and x/y dimensions of a view
 //it returns the cursors x/y and origins y to position the cursor in the
 //last line
-func caclulateCursor(l, mx, my int) (cx, cy, oy int) {
+func calculateCursor(l, mx, my int) (cx, cy, oy int) {
 	lines := l / mx
 	switch {
 	case lines == 0:
@@ -205,6 +223,7 @@ func splitCmd(cmd string) (item, path string) {
 		//prompt only
 		pStart, pEnd = strings.Index(cmd, ":")+1, strings.Index(cmd, "$ ")+1
 	case cmd[iStart] == '/':
+		fmt.Println("hier")
 		pStart = iStart
 		pEnd = findLastSep(cmd, pathSep) + 1
 		iStart = pEnd
@@ -214,13 +233,25 @@ func splitCmd(cmd string) (item, path string) {
 	default:
 		pStart, pEnd = strings.Index(cmd, ":")+1, strings.Index(cmd, "$ ")+1
 	}
-
 	path = cmd[pStart : pEnd-1]
 	item = cmd[iStart:]
+
+	//seperate remaining paths from item
+	if iStart = findLastSep(item, pathSep); iStart != -1 {
+		path = path + "/" + item[:iStart]
+		item = item[iStart+1:]
+	}
+
+	//fix for absolute paths starting from root
+	if path == "" {
+		path = "/"
+	}
+
 	return
 }
 
 func findLastSep(str string, sep []string) (max int) {
+	max = -1
 	for _, s := range sep {
 		if i := strings.LastIndex(str, s); i > max {
 			max = i

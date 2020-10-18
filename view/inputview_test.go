@@ -45,7 +45,7 @@ func Test_caclulateCursor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotCx, gotCy, gotOy := caclulateCursor(tt.args.l, tt.args.mx, tt.args.my)
+			gotCx, gotCy, gotOy := calculateCursor(tt.args.l, tt.args.mx, tt.args.my)
 			if gotCx != tt.wantCx {
 				t.Errorf("caclulateCursor() gotCx = %v, want %v", gotCx, tt.wantCx)
 			}
@@ -73,6 +73,9 @@ func Test_splitCmd(t *testing.T) {
 		{"handle empty string", "", "", ""},
 		{"handle prompt only", "user@host:/tmp/tmp$ ", "", "/tmp/tmp"},
 		{"handle one char item", "user@host:/tmp/tmp$ x", "x", "/tmp/tmp"},
+		{"find deeper dir with ./", "user@host:/tmp/tmp$ ./dir/fo", "fo", "/tmp/tmp/dir"},
+		{"find deeper dir without ./", "user@host:/tmp/tmp$ dir/fo", "fo", "/tmp/tmp/dir"},
+		{"find absolute paths starting from root", "user@host:/tmp/tmp$ /fo", "fo", "/"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -100,6 +103,7 @@ func Test_findLastSep(t *testing.T) {
 		{"find last /", args{"test/test/", []string{"/"}}, 9},
 		{"find last \\", args{"test/test\\", []string{"/", "\\"}}, 9},
 		{"find last \\ with following other chars", args{"test/test\\test", []string{"/", "\\"}}, 9},
+		{"return -1 without sep", args{"test", []string{"/", "\\"}}, -1},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
