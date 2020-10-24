@@ -58,7 +58,7 @@ func (i *tCompletionView) Edit(view *gocui.View, key gocui.Key, char rune, mod g
 	_, cy := view.Cursor()
 	_, oy := view.Origin()
 	switch {
-	case key == gocui.KeyTab || key == gocui.KeyEsc:
+	case key == gocui.KeyEsc:
 		i.toggle()
 	case key == gocui.KeyArrowDown:
 		if cy+oy < len(i.completions)-1 {
@@ -66,8 +66,8 @@ func (i *tCompletionView) Edit(view *gocui.View, key gocui.Key, char rune, mod g
 		}
 	case key == gocui.KeyArrowUp:
 		view.MoveCursor(0, -1, true)
-	case key == gocui.KeyEnter:
-		fmt.Fprint(vInputView.view, view.BufferLines()[cy+oy][i.itemLength:]) //TODO: subtract item
+	case key == gocui.KeyEnter || key == gocui.KeyTab:
+		fmt.Fprint(vInputView.view, view.BufferLines()[cy+oy][i.itemLength:])
 		if i.completions[cy+oy].IsDir() {
 			fmt.Fprint(vInputView.view, "/")
 		}
@@ -78,22 +78,6 @@ func (i *tCompletionView) Edit(view *gocui.View, key gocui.Key, char rune, mod g
 
 func (i *tCompletionView) toggle() {
 	i.visible = !i.visible
-}
-
-//completionSearch takes search term and directory. It returns a slice of files and directorys
-//the names of wich start with search term
-func completionSearch(srch, dir string) (completions []os.FileInfo) {
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return
-	}
-
-	for _, file := range files {
-		if strings.HasPrefix(file.Name(), srch) {
-			completions = append(completions, file)
-		}
-	}
-	return
 }
 
 func (i *tCompletionView) prepareView() (x1, y1, x2, y2 int, out string) {
@@ -130,5 +114,21 @@ func (i *tCompletionView) prepareView() (x1, y1, x2, y2 int, out string) {
 		y1 = 1
 	}
 
+	return
+}
+
+//completionSearch takes search term and directory. It returns a slice of files and directorys
+//the names of wich start with search term
+func completionSearch(srch, dir string) (completions []os.FileInfo) {
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return
+	}
+
+	for _, file := range files {
+		if strings.HasPrefix(file.Name(), srch) {
+			completions = append(completions, file)
+		}
+	}
 	return
 }

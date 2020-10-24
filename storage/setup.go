@@ -44,7 +44,7 @@ func openDB(dbPath string) (db *sql.DB, err error) {
 	sqlStmt := `
 		CREATE TABLE IF NOT EXISTS history (id INTEGER not null primary key, command TEXT);
 		CREATE INDEX IF NOT EXISTS idx_history_command ON history (command);
-		CREATE TABLE IF NOT EXISTS workdir (item TEXT, path TEXT, mode INTEGER, isdir INTEGER);`
+		CREATE TABLE IF NOT EXISTS bin (full TEXT primary key, item TEXT, path TEXT);`
 	_, err = db.Exec(sqlStmt)
 	return
 }

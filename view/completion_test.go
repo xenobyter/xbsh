@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestReadDir(t *testing.T) {
+func Test_completionSearch(t *testing.T) {
 	//setup
 	tDir, err := ioutil.TempDir("", "xbsh")
 	if err != nil {

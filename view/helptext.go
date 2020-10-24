@@ -14,5 +14,5 @@ as usual. Select a line with <Enter>.
 
 Completion:
 Press <TAB> to complete. If more than one possible completions are found, a new view is opened. Navigate with 
-Arrows aus usual, <ENTER> selects. Hit <TAB> or <EsC> to close the view without acutally completing.
+Arrows aus usual, <ENTER> or <TAB> selects. Hit <EsC> to close the view without acutally completing.
 `

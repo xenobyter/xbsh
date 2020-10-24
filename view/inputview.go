@@ -150,9 +150,12 @@ func (i *tInputView) cursorLeft() {
 }
 
 func (i *tInputView) tabComplete() {
-	item, path := splitCmd(i.view.Buffer())
+	item, path, bin := cmd.LastItem(i.view.Buffer())
 	vCompletionView.itemLength = len(item)
 	vCompletionView.completions = completionSearch(item, path)
+	if bin {
+		vCompletionView.completions = append(vCompletionView.completions, storage.PathComplete(item)...)
+	}
 	switch len(vCompletionView.completions) {
 	case 0:
 		return
@@ -204,58 +207,4 @@ func calculateCursor(l, mx, my int) (cx, cy, oy int) {
 		cx = l - lines*mx
 	}
 	return cx, cy, oy
-}
-
-// splitCmd takes the input buffer and returns the path and the item for completion
-// item is the word following the last item seperator witout any path
-// path is either the workdir or an absolut path from the item
-func splitCmd(cmd string) (item, path string) {
-	var itemSep = []string{" "} //TODO: #63 Add itemSep to config management
-	var pathSep = []string{"/"} //TODO: #64 Add pathSep to config management
-	var iStart, pStart, pEnd int
-
-	cmd = strings.TrimSuffix(cmd, "\n")
-	iStart = findLastSep(cmd, itemSep) + 1
-	switch {
-	case cmd == "":
-		return
-	case iStart == len(cmd):
-		//prompt only
-		pStart, pEnd = strings.Index(cmd, ":")+1, strings.Index(cmd, "$ ")+1
-	case cmd[iStart] == '/':
-		fmt.Println("hier")
-		pStart = iStart
-		pEnd = findLastSep(cmd, pathSep) + 1
-		iStart = pEnd
-	case len(cmd) >= iStart+2 && cmd[iStart:iStart+2] == "./":
-		iStart += 2
-		pStart, pEnd = strings.Index(cmd, ":")+1, strings.Index(cmd, "$ ")+1
-	default:
-		pStart, pEnd = strings.Index(cmd, ":")+1, strings.Index(cmd, "$ ")+1
-	}
-	path = cmd[pStart : pEnd-1]
-	item = cmd[iStart:]
-
-	//seperate remaining paths from item
-	if iStart = findLastSep(item, pathSep); iStart != -1 {
-		path = path + "/" + item[:iStart]
-		item = item[iStart+1:]
-	}
-
-	//fix for absolute paths starting from root
-	if path == "" {
-		path = "/"
-	}
-
-	return
-}
-
-func findLastSep(str string, sep []string) (max int) {
-	max = -1
-	for _, s := range sep {
-		if i := strings.LastIndex(str, s); i > max {
-			max = i
-		}
-	}
-	return
 }
