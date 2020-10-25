@@ -1,4 +1,7 @@
-package storage
+/*
+Package db implements functions for local persistence of history, cache and settings
+*/
+package db
 
 import (
 	"log"

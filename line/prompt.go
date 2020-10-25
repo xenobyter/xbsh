@@ -1,12 +1,12 @@
-package cmd
+package line
 
 import (
 	"os"
 	"os/user"
 )
 
-// GetPrompt returns the Prompt
-func GetPrompt() string {
+// Prompt returns the Prompt
+func Prompt() string {
 	user, _ := user.Current()
 	dir, _ := os.Getwd()
 	host, _ := os.Hostname()

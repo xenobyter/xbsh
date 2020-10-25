@@ -2,79 +2,114 @@ package view
 
 import (
 	"fmt"
+	"log"
 	"unicode/utf8"
 
-	"github.com/xenobyter/xbsh/storage"
-
-	"github.com/jroimartin/gocui"
+	"github.com/awesome-gocui/gocui"
+	"github.com/xenobyter/xbsh/db"
 )
-
-type tHistoryView struct {
-	name    string
-	view    *gocui.View
-	visible bool
-}
 
 const (
 	offset = 8
 )
 
-func newHistoryView(name string) *tHistoryView {
-	return &tHistoryView{name: name, visible: false}
+//History takes a string and uses it to search in db. It displays the filtered
+//results. One entry can be selected with Arrowkeys. Enter returns this entry
+func History(line string) string {
+	v := newHistoryView("History", line)
+	g, err := gocui.NewGui(gocui.OutputNormal, false)
+	if err != nil {
+		log.Panicln(err)
+	}
+	defer g.Close()
+
+	g.SetManagerFunc(v.layout)
+	v.keybindings(g)
+	g.Cursor = true
+	g.Highlight = true
+	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
+		log.Panicln(err)
+	}
+	return v.line
 }
 
-func (i *tHistoryView) Layout(gui *gocui.Gui) error {
-	var err error
-	maxX, maxY := gui.Size()
+type historyView struct {
+	name, line string
+	view       *gocui.View
+}
 
-	i.view, err = gui.SetView(i.name, overlayCoord["x0"], overlayCoord["y0"], maxX+overlayCoord["x1"], maxY+overlayCoord["y1"])
-	if err != nil {
-		if err != gocui.ErrUnknownView {
+func newHistoryView(name, line string) *historyView {
+	return &historyView{name: name, line: line}
+}
+
+func (h *historyView) keybindings(g *gocui.Gui) {
+	if err := g.SetKeybinding("", gocui.KeyEsc, gocui.ModNone, quit); err != nil {
+		log.Panicln(err)
+	}
+	if err := g.SetKeybinding("", gocui.KeyF2, gocui.ModNone, quit); err != nil {
+		log.Panicln(err)
+	}
+	if err := g.SetKeybinding("", gocui.KeyEnter, gocui.ModNone, h.quit); err != nil {
+		log.Panicln(err)
+	}
+}
+
+func (h *historyView) quit(g *gocui.Gui, v *gocui.View) error {
+	_, cy := v.Cursor()
+	h.line = v.BufferLines()[cy]
+	if cy == 0 {
+		h.line = v.BufferLines()[cy][offset:]
+	}
+	return gocui.ErrQuit
+}
+
+func (h *historyView) layout(g *gocui.Gui) error {
+	var err error
+	maxX, maxY := g.Size()
+	if h.view, err = g.SetView(h.name, 0, 0, maxX-1, maxY-2, 0); err != nil {
+		if !gocui.IsUnknownView(err) {
 			return err
 		}
-
-		//Startup tasks
-		i.view.Editor = i
-		i.view.Editable = true
-		i.view.Title = i.name
-		i.view.Wrap = true
-		i.view.Highlight = true
-	}
-	if !i.visible {
-		//Hide the view
-		gui.DeleteView(i.name)
-	} else {
-		gui.SetCurrentView(i.view.Name())
+		h.view.Editor = h
+		h.view.Editable = true
+		h.view.Wrap = true
+		h.view.Frame = true
+		h.view.Title = h.name
+		h.view.Highlight = true
+		h.search(h.line)
+		h.view.SetCursor(offset, 0)
+		if _, err := g.SetCurrentView(h.name); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-func (i *tHistoryView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.Modifier) {
+func (h *historyView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocui.Modifier) {
 	cx, cy := view.Cursor()
 	ox, oy := view.Origin()
 	switch {
 	case char != 0 && mod == 0:
-		i.resetPos(cx)
+		h.resetPos(cx)
 		view.EditWrite(char)
-		i.search(view.BufferLines()[0][offset:])
+		h.search(view.BufferLines()[0][offset:])
 	case key == gocui.KeySpace:
-		i.resetPos(cx)
+		h.resetPos(cx)
 		view.EditWrite(' ')
-		i.search(view.BufferLines()[0][offset:])
+		h.search(view.BufferLines()[0][offset:])
 	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
-		i.resetPos(cx)
+		h.resetPos(cx)
 		if cx > offset {
 			view.EditDelete(true)
 		}
-		i.search(view.BufferLines()[0][offset:])
+		h.search(view.BufferLines()[0][offset:])
 	case key == gocui.KeyDelete:
-		i.resetPos(cx)
+		h.resetPos(cx)
 		if cx >= offset && cx < utf8.RuneCountInString(view.BufferLines()[0]) {
 			view.EditDelete(false)
 		}
-		i.search(view.BufferLines()[0][offset:])
-	case key == gocui.KeyF2:
-		i.toggle()
+		h.search(view.BufferLines()[0][offset:])
+
 	case key == gocui.KeyArrowLeft:
 		if cx > offset {
 			view.MoveCursor(-1, 0, true)
@@ -92,7 +127,7 @@ func (i *tHistoryView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocu
 		if oy > 8 {
 			view.SetOrigin(ox, oy-8)
 		} else {
-			i.resetPos(cx)
+			h.resetPos(cx)
 		}
 	case key == gocui.KeyPgdn:
 		switch {
@@ -112,41 +147,19 @@ func (i *tHistoryView) Edit(view *gocui.View, key gocui.Key, char rune, mod gocu
 		if cy+oy < len(view.BufferLines())-2 {
 			view.MoveCursor(0, 1, true)
 		}
-	case key == gocui.KeyEnter:
-		cmdString := view.BufferLines()[cy]
-		if cy == 0 {
-			cmdString = view.BufferLines()[cy][offset:]
-		}
-		i.toggle()
-		vInputView.view.Clear()
-		vInputView.setPrompt()
-		fmt.Fprintf(vInputView.view, cmdString)
-		vInputView.view.MoveCursor(utf8.RuneCountInString(cmdString), 0, true)
 	}
 }
 
-func (i *tHistoryView) toggle() {
-	i.visible = !i.visible
-	//Trigger initial search
-	if i.visible {
-		srch := trimLine(vInputView.view.BufferLines())
-		go func() {
-			i.search(srch)
-			i.view.SetCursor(8+utf8.RuneCountInString(srch), 0)
-		}()
-	}
-}
-
-func (i *tHistoryView) search(srch string) {
-	res := storage.HistorySearch(srch)
-	i.view.Clear()
-	fmt.Fprintln(i.view, "Search:", srch)
+func (h *historyView) search(srch string) {
+	res := db.HistorySearch(srch)
+	h.view.Clear()
+	fmt.Fprintln(h.view, "Search:", srch)
 	for _, r := range res {
-		fmt.Fprintln(i.view, r)
+		fmt.Fprintln(h.view, r)
 	}
 }
 
-func (i *tHistoryView) resetPos(cx int) {
-	i.view.SetOrigin(0, 0)
-	i.view.SetCursor(cx, 0)
+func (h *historyView) resetPos(cx int) {
+	h.view.SetOrigin(0, 0)
+	h.view.SetCursor(cx, 0)
 }

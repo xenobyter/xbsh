@@ -1,10 +1,10 @@
 module github.com/xenobyter/xbsh
 
-go 1.13
+go 1.15
 
 require (
-	github.com/jroimartin/gocui v0.4.0
-	github.com/mattn/go-runewidth v0.0.9 // indirect
-	github.com/mattn/go-sqlite3 v2.0.3+incompatible
-	github.com/nsf/termbox-go v0.0.0-20200418040025-38ba6e5628f1 // indirect
+	github.com/awesome-gocui/gocui v0.6.0
+	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807
+	github.com/mattn/go-sqlite3 v1.14.4
+	golang.org/x/sys v0.0.0-20201101102859-da207088b7d1 // indirect
 )

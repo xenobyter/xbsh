@@ -1,4 +1,4 @@
-package storage
+package db
 
 import (
 	"os"
@@ -48,9 +48,9 @@ func Test_GetMaxID(t *testing.T) {
 	dir := tempDirHelper()
 	defer os.RemoveAll(dir)
 	db, _ = openDB(dir + "/" + "test.sqlite")
-	
+
 	for i, tt := range tests {
-		switch i{
+		switch i {
 		case 1:
 			HistoryWrite("cmd01")
 			HistoryWrite("cmd02")
@@ -75,21 +75,21 @@ func TestHistoryRead(t *testing.T) {
 		want  string
 		want1 int64
 	}{
-		{"should return \"\",1 when called on empty db", args{0}, "", 1},
-		{"should return \"\",3 for id=3", args{3}, "", 3},
+		{"should return \"\",0 when called on empty db", args{0}, "", 0},
+		{"should return \"\",2 for id=3", args{3}, "", 2},
 		{"should return \"cmd01\",1 for id=1", args{1}, "cmd01", 1},
 		{"should return \"cmd02\",2 for id=2", args{2}, "cmd02", 2},
-		{"should return \"\",3 for id=0", args{0}, "", 3},
-		{"should return \"\",3 for id=-2", args{-2}, "", 3},
+		{"should return \"\",2 for id=0", args{0}, "", 2},
+		{"should return \"\",2 for id=-2", args{-2}, "", 2},
 	}
 
 	//setup
 	dir := tempDirHelper()
 	defer os.RemoveAll(dir)
 	db, _ = openDB(dir + "/" + "test.sqlite")
-	
+
 	for i, tt := range tests {
-		if i==1 {
+		if i == 1 {
 			//only first test with empty db
 			HistoryWrite("cmd01")
 			HistoryWrite("cmd02")
@@ -109,13 +109,13 @@ func TestHistoryRead(t *testing.T) {
 func TestHistorySearch(t *testing.T) {
 	tests := []struct {
 		name    string
-		search string
+		search  string
 		wantRes []string
 	}{
-		{"should return 2 rows with search = \"\"","",[]string{"cmd02","cmd01"}},
-		{"should return 2 rows with search = \"cmd0\"","cmd0",[]string{"cmd02","cmd01"}},
-		{"should return 1 rows with search = \"cmd01\"","cmd01",[]string{"cmd01"}},
-		{"should return 0 rows with search = \"cmd03\"","cmd03",nil},
+		{"should return 2 rows with search = \"\"", "", []string{"cmd02", "cmd01"}},
+		{"should return 2 rows with search = \"cmd0\"", "cmd0", []string{"cmd02", "cmd01"}},
+		{"should return 1 rows with search = \"cmd01\"", "cmd01", []string{"cmd01"}},
+		{"should return 0 rows with search = \"cmd03\"", "cmd03", nil},
 	}
 
 	//setup
