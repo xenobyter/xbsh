@@ -19,7 +19,7 @@ func tabComplete(line string) (res string) {
 	}
 	switch len(completions) {
 	case 0:
-		return
+		return line
 	case 1:
 		res = line + completions[0].Name()[utf8.RuneCountInString(item):]
 		if completions[0].IsDir() {
@@ -28,12 +28,15 @@ func tabComplete(line string) (res string) {
 	default:
 		keyboard.Close()
 		defer keyboard.Open()
-		res = line + view.Completion(completions)[utf8.RuneCountInString(item):]
+		res = line
+		if c := view.Completion(completions); len(c) > 0 {
+			res += c[utf8.RuneCountInString(item):]
+		}
 	}
 	return
 }
 
-//completionSearch takes search term and directory. It returns a slice of files and directorys
+//completionSearch takes search term and directory. It returns a slice of files and directories
 //the names of wich start with search term
 func completionSearch(srch, dir string) (completions []os.FileInfo) {
 	files, err := ioutil.ReadDir(dir)
