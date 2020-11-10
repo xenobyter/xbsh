@@ -30,7 +30,7 @@ func getPath() []string {
 	return strings.Split(os.Getenv("PATH"), ":")
 }
 
-//PathCache runs throug PATH and stores files
+//PathCache runs through PATH and stores files
 func PathCache() {
 	for _, p := range getPath() {
 		dirScan(p)

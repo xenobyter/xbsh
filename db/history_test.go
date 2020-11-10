@@ -133,3 +133,42 @@ func TestHistorySearch(t *testing.T) {
 		})
 	}
 }
+
+func Test_cleanUp(t *testing.T) {
+	type args struct {
+		maxEntires int
+		delExit   string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantCnt int64
+		wantErr bool
+	}{
+		{"Delete 'exit'", args{10, "exit"}, 2, false},
+		{"Delete 'delete1'", args{2, "exit"}, 1, false},
+	}
+
+	//setup
+	dir := tempDirHelper()
+	// defer os.RemoveAll(dir)
+	db, _ = openDB(dir + "/" + "test.sqlite")
+	HistoryWrite("exit")
+	HistoryWrite("delete1")
+	HistoryWrite("delete2")
+	HistoryWrite("delete3")
+	HistoryWrite("exit")
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotCnt, err := CleanUp(tt.args.maxEntires, tt.args.delExit)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("cleanUp() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotCnt != tt.wantCnt {
+				t.Errorf("cleanUp() = %v, want %v", gotCnt, tt.wantCnt)
+			}
+		})
+	}
+}

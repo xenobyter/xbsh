@@ -25,8 +25,6 @@ func HistoryWrite(cmd string) (id int64) {
 	return
 }
 
-//TODO: #46 Purge old entries from command history
-
 // HistoryRead takes an id and returns the stored command and it's id.
 // It returns an empty string and max(id) when no command is stored for the given id
 func HistoryRead(id int64) (string, int64) {
@@ -35,7 +33,7 @@ func HistoryRead(id int64) (string, int64) {
 	err := db.QueryRow("SELECT command FROM history WHERE id = ?", id).Scan(&cmd)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return "", GetMaxID() 
+			return "", GetMaxID()
 		}
 		log.Fatal(err)
 	}
@@ -71,4 +69,37 @@ func HistorySearch(search string) (res []string) {
 		log.Fatal(err)
 	}
 	return
+}
+
+// CleanUp deletes old and unwanted commands from history
+// delExit can be used to clean history from unwanted 'exit' commands
+// maxEntires and delExit are supposed to be set from cfg
+// Cleanup returns the deleted rows either from maxEntries or delExit and any error
+func CleanUp(maxEntires int, delExit string) (int64, error) {
+	stmt, err := db.Prepare("DELETE FROM history WHERE command = ?;")
+	if err != nil {
+		return 0, err
+	}
+	res, err := stmt.Exec(delExit)
+	if err != nil {
+		return 0, err
+	}
+	r1, err := res.RowsAffected()
+	if err != nil {
+		return r1, err
+	}
+
+	stmt, err = db.Prepare("DELETE FROM history WHERE id IN (SELECT id FROM history ORDER BY id DESC LIMIT -1 OFFSET ?)")
+	if err != nil {
+		return r1, err
+	}
+	res, err = stmt.Exec(maxEntires)
+	if err != nil {
+		return r1, err
+	}
+	r2, err := res.RowsAffected()
+	if err != nil {
+		return r1 + r2, err
+	}
+	return r1 + r2, nil
 }

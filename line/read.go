@@ -9,6 +9,7 @@ import (
 
 	"github.com/eiannone/keyboard"
 
+	"github.com/xenobyter/xbsh/cfg"
 	"github.com/xenobyter/xbsh/db"
 	"github.com/xenobyter/xbsh/term"
 	"github.com/xenobyter/xbsh/view"
@@ -197,8 +198,11 @@ func Read(prompt string, test ...mockInput) (line string) {
 		//Enter
 		case k == keyboard.KeyEnter:
 			fmt.Println()
-			hist.id = db.HistoryWrite(line)
-			hist.pending = ""
+			go func(){
+				hist.id = db.HistoryWrite(line)
+				hist.pending = ""
+				db.CleanUp(cfg.HistoryMaxEntries, cfg.HistoryDelExitCmd)
+			}()
 			return
 		}
 		out, dx := output(prompt, line, lx, ox, ld)
