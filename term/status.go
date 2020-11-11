@@ -42,7 +42,7 @@ func RestartStatus() {
 }
 
 func getStatusBarContent(t time.Time, cLen uint16) string {
-	bar := "| Help: F1 | Hist: F2 "
+	bar := "| F1: Help | F2: Hist | F3: cd "
 	date := t.Format("15:04:05") + " |"
 	fill := int(cLen) - len(bar) - len(date)
 	if fill < 0 {

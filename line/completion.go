@@ -13,6 +13,17 @@ import (
 
 func tabComplete(line string) (res string) {
 	item, path, bin := lastItem(line)
+
+	//handle cd
+	if line == "cd" || line == "cd " {
+		keyboard.Close()
+		defer keyboard.Open()
+		p := view.CD(path)
+		if p != "" {
+			return "cd " + p
+		}
+	}
+
 	completions := completionSearch(item, path)
 	if bin {
 		completions = append(completions, db.PathComplete(item)...)

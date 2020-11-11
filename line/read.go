@@ -5,6 +5,7 @@ package line
 
 import (
 	"fmt"
+	"os"
 	"unicode/utf8"
 
 	"github.com/eiannone/keyboard"
@@ -188,17 +189,27 @@ func Read(prompt string, test ...mockInput) (line string) {
 		case k == keyboard.KeyF2:
 			line = openView(view.History, line)
 			lx, ox = move(len(line), lx, ox, utf8.RuneCountInString(line), ld)
-			//Help
+		//Help
 		case k == keyboard.KeyF1:
 			openView(view.Help, "")
-			//Complete
+		//Complete
 		case k == keyboard.KeyTab:
 			line = tabComplete(line)
 			lx, ox = move(len(line), lx, ox, utf8.RuneCountInString(line), ld)
+			//cd
+		case k == keyboard.KeyF3:
+			wd,_:=os.Getwd()
+			if dir:=openView(view.CD, wd); dir!="" {
+				line = "cd " + dir
+				goto Execute
+			}
+			break
+			Execute:
+			fallthrough
 		//Enter
 		case k == keyboard.KeyEnter:
 			fmt.Println()
-			go func(){
+			go func() {
 				hist.id = db.HistoryWrite(line)
 				hist.pending = ""
 				db.CleanUp(cfg.HistoryMaxEntries, cfg.HistoryDelExitCmd)
