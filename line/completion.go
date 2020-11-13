@@ -83,7 +83,7 @@ func splitBuffer(buffer string, sep []rune) []string {
 // item to be possibly completed and it's path. If the item is the
 // first item in a cmd group and without path, bin is true.
 // In this case files from PATH can be completed.
-func lastItem(line string) (cmd, path string, bin bool) {
+func lastItem(line string) (cmd, path string, bin bool) { //TODO: #78 Refactor completion to use filepath.Glob()
 	bin = true
 
 	//Trim trainling \n

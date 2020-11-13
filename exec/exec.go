@@ -60,7 +60,8 @@ func Cmd(line string) (err error) {
 	return
 }
 
-func splitArgs(line string) (command string, args []string, err error) {
+func splitArgs(line string) (command string, expArgs []string, err error) {
+	var args []string
 	if line == "" {
 		err = errors.New("errNoCommand")
 	} else {
@@ -68,6 +69,7 @@ func splitArgs(line string) (command string, args []string, err error) {
 		command = fields[0]
 		args = strings.Fields(line)[1:]
 	}
+		expArgs = append(expArgs, expandArg(args)...)
 	return
 }
 
@@ -77,7 +79,7 @@ func changeDir(args []string) (err error) {
 		usr, _ := user.Current()
 		args = append(args, usr.HomeDir)
 	}
-	//acutally change dir
+	//actually change dir
 	if err = os.Chdir(args[0]); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return

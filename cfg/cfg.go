@@ -8,3 +8,8 @@ const (
 	HistoryMaxEntries = 1000
 	HistoryDelExitCmd = "exit"
 )
+
+// Export seperators
+const (
+	PathSep="/"
+)
