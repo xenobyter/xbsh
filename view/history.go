@@ -56,8 +56,9 @@ func (h *historyView) keybindings(g *gocui.Gui) {
 
 func (h *historyView) quit(g *gocui.Gui, v *gocui.View) error {
 	_, cy := v.Cursor()
-	h.line = v.BufferLines()[cy]
-	if cy == 0 {
+	_, oy := v.Origin()
+	h.line = v.BufferLines()[cy+oy]
+	if cy+oy == 0 {
 		h.line = v.BufferLines()[cy][offset:]
 	}
 	return gocui.ErrQuit
