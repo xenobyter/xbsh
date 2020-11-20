@@ -196,15 +196,18 @@ func Read(prompt string, test ...mockInput) (line string) {
 		case k == keyboard.KeyTab:
 			line = tabComplete(line)
 			lx, ox = move(len(line), lx, ox, utf8.RuneCountInString(line), ld)
-			//cd
+		//Background jobs
+		case k == keyboard.KeyF4:
+			openView(view.BG, "")
+		//cd
 		case k == keyboard.KeyF3:
-			wd,_:=os.Getwd()
-			if dir:=openView(view.CD, wd); dir!="" {
+			wd, _ := os.Getwd()
+			if dir := openView(view.CD, wd); dir != "" {
 				line = "cd " + dir
 				goto Execute
 			}
 			break
-			Execute:
+		Execute:
 			fallthrough
 		//Enter
 		case k == keyboard.KeyEnter:

@@ -50,7 +50,7 @@ func Test_splitArgs(t *testing.T) {
 		wantErr     bool
 	}{
 		{"Empty line", "", "", nil, true},
-		{"Command only", "c", "c", []string{}, false},
+		{"Command only", "c", "c", nil, false},
 		{"One arg", "c a", "c", []string{"a"}, false},
 		{"Two args", "c a b", "c", []string{"a", "b"}, false},
 		{"More blanks", " c  a  b ", "c", []string{"a", "b"}, false},

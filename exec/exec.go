@@ -37,6 +37,9 @@ func Cmd(line string) (err error) {
 
 	//handle the command
 	switch command {
+	case "bg":
+		j := BgJob(args)
+		fmt.Printf("background job %v started\n", j)
 	case "cd":
 		err = changeDir(args)
 	default:
@@ -45,8 +48,7 @@ func Cmd(line string) (err error) {
 		cmd.Stdin = os.Stdin
 		cmd.Stderr = wStdErr
 		cmd.Stdout = os.Stdin
-		cmd.Start()
-		err = cmd.Wait()
+		err = cmd.Run()
 	}
 
 	//finish
@@ -69,7 +71,7 @@ func splitArgs(line string) (command string, expArgs []string, err error) {
 		command = fields[0]
 		args = strings.Fields(line)[1:]
 	}
-		expArgs = append(expArgs, expandArg(args)...)
+	expArgs = expandArg(args)
 	return
 }
 

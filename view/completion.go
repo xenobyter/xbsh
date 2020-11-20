@@ -71,6 +71,7 @@ func (i *completionView) layout(g *gocui.Gui) error {
 	}
 	return nil
 }
+
 func (i *completionView) quit(g *gocui.Gui, v *gocui.View) error {
 	_, cy := v.Cursor()
 	_, oy := v.Origin()

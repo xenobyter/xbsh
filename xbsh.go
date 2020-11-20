@@ -12,15 +12,16 @@ import (
 
 
 func main() {
+	go term.StatusLine()
+	go db.PathCache()
+	
 	//setup scroll region
 	ws, _ := term.GetWinsize()
 	fmt.Printf("\033[2J\033[0;%vr", ws.Row-1)
-	go term.StatusLine()
-	go db.PathCache()
-
 	for {
 		p := line.Prompt()
 		line := line.Read(p)
+
 		switch line {
 		case "exit":
 			os.Exit(0)

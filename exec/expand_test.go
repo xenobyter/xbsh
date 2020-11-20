@@ -33,6 +33,7 @@ func Test_expandArg(t *testing.T) {
 		{"absolute path with ?", args{[]string{dir + "/file?"}}, []string{dir + "/file1", dir + "/file2"}},
 		{"no path with ?", args{[]string{"file?"}}, []string{"file1", "file2"}},
 		{"relative path with ?", args{[]string{"./file?"}}, []string{"file1", "file2"}},
+		{"nothing to expand", args{[]string{"a", "b"}}, []string{"a", "b"}},
 	}
 
 	for _, tt := range tests {
