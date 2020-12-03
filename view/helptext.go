@@ -1,7 +1,6 @@
 package view
 
-const helptext = `
-Enter commands:
+const helptext = `Enter commands:
 Write to command line and hit <CR>.
 
 Help: 

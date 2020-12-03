@@ -17,6 +17,7 @@ func Help(string) string {
 	defer g.Close()
 
 	g.SetManagerFunc(h.layout)
+	g.Cursor = true
 	if err := h.keybindings(g); err != nil {
 		log.Panicln(err)
 	}
@@ -36,16 +37,18 @@ func newHelpView(name string) *helpView {
 
 func (h *helpView) layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	if v, err := g.SetView("help", 0, 0, maxX-1, maxY-1, 0); err != nil {
+	if v, err := g.SetView(h.name, 0, 0, maxX-1, maxY-1, 0); err != nil {
 		if !gocui.IsUnknownView(err) {
 			return err
 		}
 		v.Autoscroll = false
+		v.Editable = true
 		v.Frame = true
 		v.Title = h.name
 		v.Wrap = true
 		fmt.Fprintln(v, helptext)
-		if _, err := g.SetCurrentView("help"); err != nil {
+		v.SetCursor(0, 0)
+		if _, err := g.SetCurrentView(h.name); err != nil {
 			return err
 		}
 	}
@@ -79,18 +82,14 @@ func (h *helpView) keybindings(g *gocui.Gui) error {
 }
 
 func (h *helpView) scrollView(v *gocui.View, dy int) error {
-	if v != nil {
-		ox, oy := v.Origin()
-		_, size := v.Size()
-		lenBuf := len(v.BufferLines()) - size + 1
-		oy += dy
-		switch {
-		case oy < 0:
-			oy = 0
-		case oy > lenBuf:
-			oy = lenBuf
-		}
-		v.SetOrigin(ox, oy)
+	_, cy := v.Cursor()
+	_, oy := v.Origin()
+	switch ny := cy + oy + dy; {
+	case ny < 0:
+		v.SetCursor(0, 0)
+		v.SetOrigin(0, 0)
+	case ny < len(v.ViewBufferLines())-1:
+		v.MoveCursor(0, dy, true)
 	}
 	return nil
 }
