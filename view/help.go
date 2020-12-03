@@ -82,7 +82,7 @@ func (h *helpView) scrollView(v *gocui.View, dy int) error {
 	if v != nil {
 		ox, oy := v.Origin()
 		_, size := v.Size()
-		lenBuf := len(v.BufferLines()) - size
+		lenBuf := len(v.BufferLines()) - size + 1
 		oy += dy
 		switch {
 		case oy < 0:

@@ -1,9 +1,11 @@
 package exec
 
 import (
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 )
@@ -78,14 +80,65 @@ func TestCmd(t *testing.T) {
 		line    string
 		wantErr bool
 	}{
-		{"Empty line", "", true},
-		{"cd", "cd", false},
+		// {"Empty line", "", true},
+		// {"cd", "cd", false},
 		{"wrong args", "pwd -b", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := Cmd(tt.line); (err != nil) != tt.wantErr {
 				t.Errorf("Cmd() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_redirect(t *testing.T) {
+	//setup
+	os.Chdir(os.TempDir())
+	file, err := ioutil.TempFile("", "xbsh")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer os.Remove(file.Name())
+
+	tests := []struct {
+		name       string
+		args       []string
+		wantStdin  *os.File
+		wantStdout *os.File
+		wantStderr *os.File
+		wantArgs   []string
+		wantErr    string
+	}{
+		{"No args", []string{}, os.Stdin, os.Stdout, os.Stderr, nil, ""},
+		{"echo to absolute file", []string{"test", ">" + file.Name()}, os.Stdin, file, os.Stderr, []string{"test"}, ""},
+		{"echo to relative file", []string{"test", ">" + filepath.Base(file.Name())}, os.Stdin, file, os.Stderr, []string{"test"}, ""},
+		{"echo with space after >", []string{"test", ">", filepath.Base(file.Name())}, os.Stdin, file, os.Stderr, []string{"test"}, ""},
+		{"nothing after >", []string{"test", ">"}, os.Stdin, os.Stdout, os.Stderr, []string{"test"}, "redirect error"},
+		{"append to absolute file", []string{"test", ">>" + file.Name()}, os.Stdin, file, os.Stderr, []string{"test"}, ""},
+		{"echo with stderr", []string{"test", ">!" + file.Name()}, os.Stdin, os.Stdout, file, []string{"test"}, ""},
+		{"append stderr", []string{"test", ">>!" + file.Name()}, os.Stdin, os.Stdout, file, []string{"test"}, ""},
+		{"redirect stdin", []string{"test", "<" + file.Name()}, file, os.Stdout, os.Stderr, []string{"test"}, ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			io.WriteString(file, "t")
+			gotStdin, gotStdout, gotStderr, gotArgs, gotErr := redirect(tt.args)
+			if gotStdin.Name() != tt.wantStdin.Name() {
+				t.Errorf("redirect() gotStdin = %v, want %v", gotStdin.Name(), tt.wantStdin.Name())
+			}
+			if gotStdout.Name() != tt.wantStdout.Name() {
+				t.Errorf("redirect() gotStdout = %v, want %v", gotStdout.Name(), tt.wantStdout.Name())
+			}
+			if gotStderr.Name() != tt.wantStderr.Name() {
+				t.Errorf("redirect() gotStderr = %v, want %v", gotStderr.Name(), tt.wantStderr.Name())
+			}
+			if !reflect.DeepEqual(gotArgs, tt.wantArgs) {
+				t.Errorf("redirect() gotArgs = %v, want %v", gotArgs, tt.wantArgs)
+			}
+			if gotErr != nil && gotErr.Error() != tt.wantErr {
+				t.Errorf("redirect() gotErr = %v, want %v", gotErr, tt.wantErr)
 			}
 		})
 	}

@@ -10,13 +10,10 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"path/filepath"
 	"strings"
-)
 
-const (
-	ansiPrompt = "\033[0;32m"
-	ansiNormal = "\033[0m"
-	ansiErr    = "\033[0;31m"
+	"github.com/xenobyter/xbsh/term"
 )
 
 // Cmd takes a shell command and its arguments as a string. It returns
@@ -28,13 +25,112 @@ func Cmd(line string) (err error) {
 		return
 	}
 
-	//store normal stderr
-	oldStdErr := os.Stderr
+	stdin, stdout, stderr, args, err := redirect(args)
+	if err != nil {
+		return err
+	}
 
-	//setup the Pipe to capture stderr
-	rStdErr, wStdErr, _ := os.Pipe()
-	os.Stderr = wStdErr
+	err = run(stdin, stdout, stderr, command, args...)
+	return err
+}
 
+func redirect(args []string) (stdin, stdout, stderr *os.File, resArgs []string, err error) {
+	stdin, stdout, stderr = os.Stdin, os.Stdout, os.Stderr
+	for i, arg := range args {
+		switch {
+		case strings.HasPrefix(arg, ">>!"):
+			if len(arg) == 3 {
+				if len(args) <= i+1 {
+					err = errors.New("redirect error")
+					return
+				}
+				args[i+1] = ">>!" + args[i+1]
+				break
+			}
+			file, e := filepath.Abs(strings.TrimLeft(arg, ">>!"))
+			if e != nil {
+				err = e
+				break
+			}
+			if stderr, err = os.OpenFile(file, os.O_CREATE|os.O_APPEND|os.O_RDWR, os.ModePerm); err != nil {
+				stderr = os.Stderr
+			}
+		case strings.HasPrefix(arg, ">!"):
+			if len(arg) == 2 {
+				if len(args) <= i+1 {
+					err = errors.New("redirect error")
+					return
+				}
+				args[i+1] = ">!" + args[i+1]
+				break
+			}
+			file, e := filepath.Abs(strings.TrimLeft(arg, ">!"))
+			if e != nil {
+				err = e
+				break
+			}
+			if stderr, err = os.Create(file); err != nil {
+				stderr = os.Stderr
+			}
+		case strings.HasPrefix(arg, ">>"):
+			if len(arg) == 2 {
+				if len(args) <= i+1 {
+					err = errors.New("redirect error")
+					return
+				}
+				args[i+1] = ">>" + args[i+1]
+				break
+			}
+			file, e := filepath.Abs(strings.TrimLeft(arg, ">>"))
+			if e != nil {
+				err = e
+				break
+			}
+			if stdout, err = os.OpenFile(file, os.O_CREATE|os.O_APPEND|os.O_RDWR, os.ModePerm); err != nil {
+				stdout = os.Stdout
+			}
+		case strings.HasPrefix(arg, ">"):
+			if len(arg) == 1 {
+				if len(args) <= i+1 {
+					err = errors.New("redirect error")
+					return
+				}
+				args[i+1] = ">" + args[i+1]
+				break
+			}
+			file, e := filepath.Abs(strings.TrimLeft(arg, ">"))
+			if e != nil {
+				err = e
+				break
+			}
+			if stdout, err = os.Create(file); err != nil {
+				stdout = os.Stdout
+			}
+		case strings.HasPrefix(arg, "<"):
+			if len(arg) == 1 {
+				if len(args) <= i+1 {
+					err = errors.New("redirect error")
+					return
+				}
+				args[i+1] = "<" + args[i+1]
+				break
+			}
+			file, e := filepath.Abs(strings.TrimLeft(arg, "<"))
+			if e != nil {
+				err = e
+				break
+			}
+			if stdin, err = os.Open(file); err != nil {
+				stdin = os.Stdin
+			}
+		default:
+			resArgs = append(resArgs, arg)
+		}
+	}
+	return stdin, stdout, stderr, resArgs, err
+}
+
+func run(stdin, stdout, stderr *os.File, command string, args ...string) (err error) {
 	//handle the command
 	switch command {
 	case "bg":
@@ -45,21 +141,17 @@ func Cmd(line string) (err error) {
 	default:
 		cmd := exec.Command(command, args...)
 		//run it
-		cmd.Stdin = os.Stdin
-		cmd.Stderr = wStdErr
-		cmd.Stdout = os.Stdin
-		err = cmd.Run()
+		cmd.Stdin = stdin
+		cmd.Stdout = stdout
+		pipe, _ := cmd.StderrPipe()
+		err = cmd.Start()
+		out, _ := ioutil.ReadAll(pipe)
+		if len(out) > 0 {
+			fmt.Fprint(stderr, term.AnsiErr, string(out), term.AnsiNormal)
+		}
+		err = cmd.Wait()
 	}
-
-	//finish
-	wStdErr.Close()
-	stderr, _ := ioutil.ReadAll(rStdErr)
-	os.Stderr = oldStdErr
-
-	if len(stderr) > 0 {
-		fmt.Fprint(os.Stderr, ansiErr, string(stderr), ansiNormal)
-	}
-	return
+	return err
 }
 
 func splitArgs(line string) (command string, expArgs []string, err error) {
