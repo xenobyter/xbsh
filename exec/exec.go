@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/xenobyter/xbsh/cfg"
 	"github.com/xenobyter/xbsh/term"
 )
 
@@ -20,17 +21,46 @@ import (
 // the commands error
 func Cmd(line string) (err error) {
 
-	command, args, err := splitArgs(line)
-	if err != nil {
-		return
-	}
+	groups := strings.Split(line, cfg.PipeSep)
+	r, w := make([]*os.File, len(groups)), make([]*os.File, len(groups))
 
-	stdin, stdout, stderr, args, err := redirect(args)
-	if err != nil {
-		return err
-	}
+	for i, group := range groups {
 
-	err = run(stdin, stdout, stderr, command, args...)
+		//prepare pipes
+		r[i], w[i], _ = os.Pipe()
+		defer r[i].Close()
+		defer w[i].Close()
+
+		//split
+		cmd, args, err := splitArgs(group)
+		if err != nil {
+			return err
+		}
+
+		//setup redirection
+		stdin, stdout, stderr, args, err := redirect(args)
+		if err != nil {
+			return err
+		}
+
+		//setup pipes
+		switch {
+		case len(groups) == 1:
+			break
+		case i == 0:
+			stdout = w[i]
+		case i == len(groups)-1:
+			w[i-1].Close()
+			stdin = r[i-1]
+		default:
+			w[i-1].Close()
+			stdout = w[i]
+			stdin = r[i-1]
+		}
+
+		//run a single group of command and args
+		err = run(stdin, stdout, stderr, cmd, args...)
+	}
 	return err
 }
 
@@ -144,8 +174,11 @@ func run(stdin, stdout, stderr *os.File, command string, args ...string) (err er
 		cmd.Stdin = stdin
 		cmd.Stdout = stdout
 		pipe, _ := cmd.StderrPipe()
-		err = cmd.Start()
-		out, _ := ioutil.ReadAll(pipe)
+		err = cmd.Start() //TODO: #83 Handle command not found
+		out, e := ioutil.ReadAll(pipe)
+		if e != nil {
+			return e
+		}
 		if len(out) > 0 {
 			fmt.Fprint(stderr, term.AnsiErr, string(out), term.AnsiNormal)
 		}

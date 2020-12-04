@@ -20,4 +20,7 @@ Background jobs can be startet by prefixing normal commands with "bg". Any outpu
 
 Redirections:
 One can redirect stdout to any file by adding ">" followed by a filename. If file exists, its conetents will be overridden. To append stdout at the end of a file without overriding use ">>". To redirect stderr use ">!" followed by a filename, to append stderr to a file use ">>!".
+
+Pipes:
+Use "|" to pipe one commands stdout to next commands stdin.
 `

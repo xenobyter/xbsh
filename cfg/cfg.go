@@ -12,4 +12,5 @@ const (
 // Export seperators
 const (
 	PathSep="/"
+	PipeSep="|"
 )
