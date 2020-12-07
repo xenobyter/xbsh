@@ -174,7 +174,10 @@ func run(stdin, stdout, stderr *os.File, command string, args ...string) (err er
 		cmd.Stdin = stdin
 		cmd.Stdout = stdout
 		pipe, _ := cmd.StderrPipe()
-		err = cmd.Start() //TODO: #83 Handle command not found
+		err = cmd.Start()
+		if err != nil {
+			fmt.Fprintf(stderr, "%v%v%v\n", term.AnsiErr, err.Error(), term.AnsiNormal)
+		}
 		out, e := ioutil.ReadAll(pipe)
 		if e != nil {
 			return e
@@ -183,6 +186,9 @@ func run(stdin, stdout, stderr *os.File, command string, args ...string) (err er
 			fmt.Fprint(stderr, term.AnsiErr, string(out), term.AnsiNormal)
 		}
 		err = cmd.Wait()
+		if err != nil {
+			fmt.Fprintf(stderr, "%v%v%v\n", term.AnsiErr, err.Error(), term.AnsiNormal)
+		}
 	}
 	return err
 }
