@@ -13,7 +13,7 @@ import (
 
 // Export path and filename for config
 const (
-	Directory = ".xbsh"
+	Directory   = ".xbsh"
 	DBFileName  = "storage.sqlite"
 	INIFileName = "xbshrc"
 )
@@ -37,17 +37,19 @@ func init() {
 
 func loadConfig(confFile string) {
 	if _, err := os.Stat(confFile); os.IsNotExist(err) {
-		f, _ := os.Create(confFile)
-		f.WriteString("#xbsh config\n")
-		f.Close()
-	}
-	conf, err := mini.LoadConfiguration(confFile)
-	if err != nil {
-		log.Fatalln(err)
-	}
+		PathSep = "/"
+		PipeSep = "|"
+		HistoryMaxEntries = 1000
+		HistoryDelExitCmd = "exit"
+	} else {
+		conf, err := mini.LoadConfiguration(confFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
 
-	PathSep = conf.StringFromSection("separators", "pathsep", "/")
-	PipeSep = conf.StringFromSection("separators", "pipesep", "|")
-	HistoryMaxEntries = conf.IntegerFromSection("history", "maxentries", 1000)
-	HistoryDelExitCmd = conf.StringFromSection("history", "delExitCmd", "exit")
+		PathSep = conf.StringFromSection("separators", "pathsep", "/")
+		PipeSep = conf.StringFromSection("separators", "pipesep", "|")
+		HistoryMaxEntries = conf.IntegerFromSection("history", "maxentries", 1000)
+		HistoryDelExitCmd = conf.StringFromSection("history", "delExitCmd", "exit")
+	}
 }
