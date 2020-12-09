@@ -60,6 +60,9 @@ func Cmd(line string) (err error) {
 
 		//run a single group of command and args
 		err = run(stdin, stdout, stderr, cmd, args...)
+		if err != nil {
+			return err
+		}
 	}
 	return err
 }

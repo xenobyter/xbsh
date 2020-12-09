@@ -136,7 +136,7 @@ func TestHistorySearch(t *testing.T) {
 
 func Test_cleanUp(t *testing.T) {
 	type args struct {
-		maxEntires int
+		maxEntires int64
 		delExit   string
 	}
 	tests := []struct {

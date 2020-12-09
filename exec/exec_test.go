@@ -80,8 +80,8 @@ func TestCmd(t *testing.T) {
 		line    string
 		wantErr bool
 	}{
-		// {"Empty line", "", true},
-		// {"cd", "cd", false},
+		{"Empty line", "", true},
+		{"cd", "cd", false},
 		{"wrong args", "pwd -b", true},
 	}
 	for _, tt := range tests {

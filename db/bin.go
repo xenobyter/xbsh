@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -21,7 +22,7 @@ func dirScan(dir string) (err error) {
 
 	for _, file := range files {
 		_, err = db.Exec("INSERT INTO bin(full, item, path) VALUES(?, ?, ?)",
-			dir+"/"+file.Name(), file.Name(), dir)
+			filepath.Join(dir, file.Name()), file.Name(), dir)
 	}
 	return
 }

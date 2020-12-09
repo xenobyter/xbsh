@@ -9,13 +9,14 @@ import (
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/xenobyter/xbsh/cfg"
 )
 
 func Test_getDotDir(t *testing.T) {
 	t.Run("should end with dotDirSuffix", func(t *testing.T) {
 		got := getDotDir()
-		if !strings.HasSuffix(got, dotDirSuffix) {
-			t.Errorf("getDotDir() = %v, want path to end with %v", got, dotDirSuffix)
+		if !strings.HasSuffix(got, cfg.Directory) {
+			t.Errorf("getDotDir() = %v, want path to end with %v", got, cfg.Directory)
 		}
 	})
 	t.Run("should start with homedir", func(t *testing.T) {

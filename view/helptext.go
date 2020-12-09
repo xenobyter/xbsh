@@ -23,4 +23,17 @@ One can redirect stdout to any file by adding ">" followed by a filename. If fil
 
 Pipes:
 Use "|" to pipe one commands stdout to next commands stdin.
+
+Configuration:
+To customize some aspects xbsh reads a simple ini-file from ~/.xbsh/xbshrc. Example:
+--------------------------------------------------------
+#xbsh config
+[separators]
+pathsep=/
+pipesep=|
+
+[history]
+maxentries=1000
+delExitCmd=exit
+--------------------------------------------------------
 `

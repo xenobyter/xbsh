@@ -4,18 +4,15 @@ Package db implements functions for local persistence of history, cache and sett
 package db
 
 import (
-	"log"
 	"database/sql"
+	"log"
 	"os"
 	"os/user"
+	"path/filepath"
 
 	//only use init()
 	_ "github.com/mattn/go-sqlite3"
-)
-
-const (
-	dotDirSuffix = ".xbsh"
-	dbFileName   = "storage.sqlite"
+	"github.com/xenobyter/xbsh/cfg"
 )
 
 var (
@@ -28,7 +25,7 @@ func init() {
 	if err != nil {
 		log.Panic(err)
 	}
-	db, err = openDB(dir + "/" + dbFileName)
+	db, err = openDB(filepath.Join(dir, cfg.DBFileName))
 	if err != nil {
 		log.Panic(err)
 	}
@@ -54,7 +51,7 @@ func openDB(dbPath string) (db *sql.DB, err error) {
 
 func getDotDir() string {
 	usr, _ := user.Current()
-	return usr.HomeDir + "/" + dotDirSuffix
+	return filepath.Join(usr.HomeDir, cfg.Directory)
 }
 
 func makeDotDir(dir string) (err error) {

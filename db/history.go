@@ -75,7 +75,7 @@ func HistorySearch(search string) (res []string) {
 // delExit can be used to clean history from unwanted 'exit' commands
 // maxEntires and delExit are supposed to be set from cfg
 // Cleanup returns the deleted rows either from maxEntries or delExit and any error
-func CleanUp(maxEntires int, delExit string) (int64, error) {
+func CleanUp(maxEntires int64, delExit string) (int64, error) {
 	stmt, err := db.Prepare("DELETE FROM history WHERE command = ?;")
 	if err != nil {
 		return 0, err

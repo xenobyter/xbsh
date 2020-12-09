@@ -7,6 +7,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/eiannone/keyboard"
+	"github.com/xenobyter/xbsh/cfg"
 	"github.com/xenobyter/xbsh/db"
 	"github.com/xenobyter/xbsh/view"
 )
@@ -34,7 +35,7 @@ func tabComplete(line string) (res string) {
 	case 1:
 		res = line + completions[0].Name()[utf8.RuneCountInString(item):]
 		if completions[0].IsDir() {
-			res += "/"
+			res += cfg.PathSep
 		}
 	default:
 		keyboard.Close()
@@ -63,9 +64,9 @@ func completionSearch(srch, dir string) (completions []os.FileInfo) {
 	return
 }
 
-var itemSep = " "          //TODO: #63 Add itemSep to config management
-var groupSep = []rune{'|'} //TODO: #69 Add groupSep to config management
-var pathSep = "/"          //TODO: #70 Add pathSep to config management
+var itemSep = " "
+var groupSep = []rune{rune(cfg.PipeSep[0])}
+var pathSep = cfg.PathSep
 
 func splitBuffer(buffer string, sep []rune) []string {
 	f := func(c rune) bool {

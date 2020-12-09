@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/awesome-gocui/gocui"
+	"github.com/xenobyter/xbsh/cfg"
 )
 
 //CD displays a view
@@ -98,8 +99,8 @@ func (i *cdView) quit(g *gocui.Gui, v *gocui.View) error {
 	_, oy := v.Origin()
 	i.line = i.path
 	if len(v.Buffer()) > 0 {
-		if !strings.HasSuffix(i.line, "/") {
-			i.line += "/"
+		if !strings.HasSuffix(i.line, cfg.PathSep) {
+			i.line += cfg.PathSep
 		}
 		i.line += v.BufferLines()[cy+oy]
 	}
@@ -152,8 +153,8 @@ func (i *cdView) arrowUp(g *gocui.Gui, v *gocui.View) error {
 func (i *cdView) arrowRight() error {
 	_, cy := i.view.Cursor()
 	_, oy := i.view.Origin()
-	if !strings.HasSuffix(i.path, "/") {
-		i.path += "/"
+	if !strings.HasSuffix(i.path, cfg.PathSep) {
+		i.path += cfg.PathSep
 	}
 	i.path += i.view.ViewBufferLines()[cy+oy]
 	i.view.SetOrigin(0, 0)
@@ -162,12 +163,12 @@ func (i *cdView) arrowRight() error {
 }
 
 func (i *cdView) arrowLeft() error {
-	idx := strings.LastIndex(i.path, "/")
+	idx := strings.LastIndex(i.path, cfg.PathSep)
 	switch idx {
 	case -1:
 		return nil
 	case 0:
-		i.path = "/"
+		i.path = cfg.PathSep
 	default:
 		i.path = i.path[:idx]
 	}
