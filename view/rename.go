@@ -35,7 +35,7 @@ func newRenameView(name string) *renameView {
 	return &renameView{name: name}
 }
 
-func (i *renameView) layout(g *gocui.Gui) error {
+func (i *renameView) layout(g *gocui.Gui) error { //TODO: Integrate db.rename
 	var (
 		err error
 	)

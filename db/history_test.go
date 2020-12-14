@@ -137,7 +137,7 @@ func TestHistorySearch(t *testing.T) {
 func Test_cleanUp(t *testing.T) {
 	type args struct {
 		maxEntires int64
-		delExit   string
+		delExit    string
 	}
 	tests := []struct {
 		name    string
@@ -151,7 +151,7 @@ func Test_cleanUp(t *testing.T) {
 
 	//setup
 	dir := tempDirHelper()
-	// defer os.RemoveAll(dir)
+	defer os.RemoveAll(dir)
 	db, _ = openDB(dir + "/" + "test.sqlite")
 	HistoryWrite("exit")
 	HistoryWrite("delete1")

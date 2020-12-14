@@ -18,7 +18,8 @@ func Test_expandArg(t *testing.T) {
 	os.Create(dir + "/file2")
 	os.Create(dir + "/filX2")
 	os.Chdir(dir)
-
+	defer os.RemoveAll(dir)
+	
 	type args struct {
 		args []string
 	}
