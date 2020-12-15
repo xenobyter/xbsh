@@ -1,20 +1,22 @@
 package view
 
 import (
+	"fmt"
 	"log"
 	"unicode/utf8"
 
 	"github.com/awesome-gocui/gocui"
+	"github.com/xenobyter/xbsh/db"
 )
 
-type renameView struct {
+type batchView struct {
 	name         string
 	lView, rView *gocui.View
 }
 
-// Rename opens the rename view
-func Rename(string) string {
-	v := newRenameView("Rename")
+// Batch opens the rename view
+func Batch(string) string {
+	v := newBatchView("Batch")
 	g, err := gocui.NewGui(gocui.OutputNormal, false)
 	if err != nil {
 		log.Panicln(err)
@@ -31,11 +33,11 @@ func Rename(string) string {
 	return ""
 }
 
-func newRenameView(name string) *renameView {
-	return &renameView{name: name}
+func newBatchView(name string) *batchView {
+	return &batchView{name: name}
 }
 
-func (i *renameView) layout(g *gocui.Gui) error { //TODO: Integrate db.rename
+func (i *batchView) layout(g *gocui.Gui) error { //TODO: Integrate db.batch
 	var (
 		err error
 	)
@@ -50,6 +52,12 @@ func (i *renameView) layout(g *gocui.Gui) error { //TODO: Integrate db.rename
 		i.lView.Title = i.name
 		i.lView.Editable = true
 		i.lView.Editor = i
+
+		//read rules
+		rules := db.ReadBatchRules()
+		for _, rule := range rules {
+			fmt.Fprintln(i.lView, rule)
+		}
 
 		i.lView.SetCursor(0, 0)
 		if _, err := g.SetCurrentView(i.name); err != nil {
@@ -69,17 +77,22 @@ func (i *renameView) layout(g *gocui.Gui) error { //TODO: Integrate db.rename
 	return nil
 }
 
-func (i *renameView) keybindings(g *gocui.Gui) error {
-	if err := g.SetKeybinding("", gocui.KeyEsc, gocui.ModNone, quit); err != nil {
+func (i *batchView) keybindings(g *gocui.Gui) error {
+	if err := g.SetKeybinding("", gocui.KeyEsc, gocui.ModNone, i.quit); err != nil {
 		log.Panicln(err)
 	}
-	if err := g.SetKeybinding("", gocui.KeyF5, gocui.ModNone, quit); err != nil {
+	if err := g.SetKeybinding("", gocui.KeyF5, gocui.ModNone, i.quit); err != nil {
 		log.Panicln(err)
 	}
 	return nil
 }
 
-func (i *renameView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
+func (i *batchView) quit(g *gocui.Gui, v *gocui.View) error {
+	db.WriteBatchRules(i.lView.BufferLines())
+	return gocui.ErrQuit
+}
+
+func (i *batchView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
 	ox, oy := v.Origin()
 	cx, cy := v.Cursor()
 	_, my := v.Size()

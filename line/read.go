@@ -201,7 +201,7 @@ func Read(prompt string, test ...mockInput) (line string) {
 			openView(view.BG, "")
 		//Background renamer
 		case k == keyboard.KeyF5:
-			openView(view.Rename, "")
+			openView(view.Batch, "")
 		//cd
 		case k == keyboard.KeyF3:
 			wd, _ := os.Getwd()
