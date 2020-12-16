@@ -2,7 +2,11 @@ package view
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
+	"strconv"
+	"strings"
 	"unicode/utf8"
 
 	"github.com/awesome-gocui/gocui"
@@ -37,7 +41,7 @@ func newBatchView(name string) *batchView {
 	return &batchView{name: name}
 }
 
-func (i *batchView) layout(g *gocui.Gui) error { //TODO: Integrate db.batch
+func (i *batchView) layout(g *gocui.Gui) error {
 	var (
 		err error
 	)
@@ -84,12 +88,27 @@ func (i *batchView) keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("", gocui.KeyF5, gocui.ModNone, i.quit); err != nil {
 		log.Panicln(err)
 	}
+	if err := g.SetKeybinding(i.name, gocui.KeyF2, gocui.ModNone, i.preview); err != nil {
+		log.Panicln(err)
+	}
 	return nil
 }
 
 func (i *batchView) quit(g *gocui.Gui, v *gocui.View) error {
 	db.WriteBatchRules(i.lView.BufferLines())
 	return gocui.ErrQuit
+}
+
+func (i *batchView) preview(g *gocui.Gui, v *gocui.View) error {
+	wd, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+	files := preview(wd, i.lView.BufferLines())
+	for _, f := range files {
+		fmt.Fprintln(i.rView, f)
+	}
+	return nil
 }
 
 func (i *batchView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
@@ -128,4 +147,79 @@ func (i *batchView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifi
 			v.MoveCursor(0, 1, true)
 		}
 	}
+}
+
+func preview(dir string, rules []string) (out []string) {
+	var longestName int
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	left := make([]string, len(files))
+	right := make([]string, len(files))
+	for i, f := range files {
+		left[i] = f.Name()
+		if l := utf8.RuneCountInString(f.Name()); l > longestName {
+			longestName = l
+		}
+		right[i] = doRules(left[i], rules)
+	}
+	for i, f := range files {
+		out = append(out, left[i]+strings.Repeat(" ", longestName-len(f.Name()))+" => "+right[i])
+
+	}
+	return
+}
+
+// doRules uses the following syntax
+// Insert: ins $place string
+// $place can be one of: "pre", "suf","pos" for a fixed position or "aft $string" to insert after a specific  substring
+func doRules(name string, rules []string) string {
+	for _, r := range rules {
+		fields := strings.Fields(r)
+		if len(fields) < 3 {
+			return name
+		}
+		
+		switch fields[0] {
+		case "ins":
+			name = place(fields[1], name, fields)
+		}
+	}
+	return name
+}
+
+// place can be one of: "pre", "suf","pos" for a fixed position or "aft $string" to insert after a specific  substring
+// ins pre string
+// ins suf string
+// ins pos 2 string
+// ins aft substring string
+// For details see tests.
+func place(place, in string, fields []string) (out string) {
+	switch place {
+	case "pre":
+		out = fields[2] + in
+	case "suf":
+		out = in + fields[2]
+	case "pos":
+		if len(fields) < 4 {
+			return in
+		}
+		pos, err := strconv.ParseInt(fields[2], 10, 0)
+		if err != nil || int(pos) > utf8.RuneCountInString(in) || pos < 0 {
+			return in
+		}
+		out = in[:pos] + fields[3] + in[pos:]
+	case "aft":
+		if len(fields) < 4 {
+			return in
+		}
+		if pos := strings.Index(in, fields[2]); pos != -1 {
+			pos += +utf8.RuneCountInString(fields[2])
+			out = in[:pos] + fields[3] + in[pos:]
+		} else {
+			return in
+		}
+	}
+	return
 }
