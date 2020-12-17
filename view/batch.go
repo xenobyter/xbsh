@@ -145,7 +145,7 @@ func (i *batchView) preview(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func (i *batchView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) { //TODO: Implement Home and End
+func (i *batchView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) { 
 	ox, oy := v.Origin()
 	cx, cy := v.Cursor()
 	_, my := v.Size()
@@ -180,6 +180,14 @@ func (i *batchView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifi
 		if cy+oy < len(v.BufferLines())-1 {
 			v.MoveCursor(0, 1, true)
 		}
+	case key == gocui.KeyEnd:
+		line, err := v.Line(cy)
+		if err != nil {
+			break
+		}
+		v.SetCursor(utf8.RuneCountInString(line), cy)
+	case key == gocui.KeyHome:
+		v.SetCursor(0, cy)
 	}
 }
 
