@@ -78,6 +78,8 @@ func (i *batchView) layout(g *gocui.Gui) error {
 		i.rView.Title = "Output"
 		i.rView.Autoscroll = true
 	}
+	i.rView.Clear()
+	i.preview(g, i.lView)
 	return nil
 }
 
@@ -88,9 +90,8 @@ func (i *batchView) keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("", gocui.KeyF5, gocui.ModNone, i.quit); err != nil {
 		log.Panicln(err)
 	}
-	if err := g.SetKeybinding(i.name, gocui.KeyF2, gocui.ModNone, i.preview); err != nil {
-		log.Panicln(err)
-	}
+	//TODO: implement tab-switching
+	//TODO: implement scrolling in results
 	return nil
 }
 
@@ -100,7 +101,7 @@ func (i *batchView) quit(g *gocui.Gui, v *gocui.View) error {
 }
 
 func (i *batchView) preview(g *gocui.Gui, v *gocui.View) error {
-	wd, err := os.UserHomeDir()
+	wd, err := os.Getwd()
 	if err != nil {
 		return err
 	}
@@ -111,7 +112,7 @@ func (i *batchView) preview(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func (i *batchView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
+func (i *batchView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) { //TODO: Implement Home and End
 	ox, oy := v.Origin()
 	cx, cy := v.Cursor()
 	_, my := v.Size()
@@ -162,7 +163,7 @@ func preview(dir string, rules []string) (out []string) {
 		if l := utf8.RuneCountInString(f.Name()); l > longestName {
 			longestName = l
 		}
-		right[i] = doRules(left[i], rules)
+		right[i] = doRules(left[i], rules, i)
 	}
 	for i, f := range files {
 		out = append(out, left[i]+strings.Repeat(" ", longestName-len(f.Name()))+" => "+right[i])
@@ -174,52 +175,60 @@ func preview(dir string, rules []string) (out []string) {
 // doRules uses the following syntax
 // Insert: ins $place string
 // $place can be one of: "pre", "suf","pos" for a fixed position or "aft $string" to insert after a specific  substring
-func doRules(name string, rules []string) string {
+func doRules(name string, rules []string, cnt int) string {
 	for _, r := range rules {
 		fields := strings.Fields(r)
+
 		if len(fields) < 3 {
 			return name
 		}
-		
 		switch fields[0] {
 		case "ins":
-			name = place(fields[1], name, fields)
+			name = insert(fields[2], name, fields, cnt)
 		}
 	}
 	return name
 }
 
-// place can be one of: "pre", "suf","pos" for a fixed position or "aft $string" to insert after a specific  substring
-// ins pre string
-// ins suf string
-// ins pos 2 string
-// ins aft substring string
+// Insert can be used with: "pre", "suf","pos" for a fixed position or "aft" to insert after a specific  substring
+// ins string pre
+// ins string suf
+// ins string pos 2
+// ins string aft substring
+// If string does parse as int, insert increments string for each file
 // For details see tests.
-func place(place, in string, fields []string) (out string) {
+func insert(place, in string, fields []string, cnt int) (out string) {
+	//handle increments
+	if start, err := strconv.ParseInt(fields[1], 10, 0); err == nil {
+		l := fmt.Sprint(len(fields[1]))
+		fields[1] = fmt.Sprintf("%0"+l+"d", int(start)+cnt)
+	}
 	switch place {
 	case "pre":
-		out = fields[2] + in
+		out = fields[1] + in
 	case "suf":
-		out = in + fields[2]
+		out = in + fields[1]
 	case "pos":
 		if len(fields) < 4 {
 			return in
 		}
-		pos, err := strconv.ParseInt(fields[2], 10, 0)
+		pos, err := strconv.ParseInt(fields[3], 10, 0)
 		if err != nil || int(pos) > utf8.RuneCountInString(in) || pos < 0 {
 			return in
 		}
-		out = in[:pos] + fields[3] + in[pos:]
+		out = in[:pos] + fields[1] + in[pos:]
 	case "aft":
 		if len(fields) < 4 {
 			return in
 		}
-		if pos := strings.Index(in, fields[2]); pos != -1 {
-			pos += +utf8.RuneCountInString(fields[2])
-			out = in[:pos] + fields[3] + in[pos:]
+		if pos := strings.Index(in, fields[3]); pos != -1 {
+			pos += +utf8.RuneCountInString(fields[3])
+			out = in[:pos] + fields[1] + in[pos:]
 		} else {
 			return in
 		}
+	default:
+		return in
 	}
 	return
 }

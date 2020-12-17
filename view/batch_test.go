@@ -35,7 +35,7 @@ func Test_preview(t *testing.T) {
 	}{
 		{"No dir, no rules", args{"", []string{}}, nil},
 		{"Dir, no rules", args{dir, []string{}}, []string{"file1  => file1", "files2 => files2"}},
-		{"Insert", args{dir, []string{"ins suf suffix"}}, []string{"file1  => file1suffix", "files2 => files2suffix"}},
+		{"Insert", args{dir, []string{"ins suffix suf"}}, []string{"file1  => file1suffix", "files2 => files2suffix"}},
 	}
 
 	for _, tt := range tests {
@@ -51,56 +51,63 @@ func Test_doRules(t *testing.T) {
 	type args struct {
 		name  string
 		rules []string
+		cnt   int
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantRes string
 	}{
-		{"No rules", args{"name", []string{}}, "name"},
-		{"Wrong rule", args{"name", []string{""}}, "name"},
-		{"Insert prefix", args{"name", []string{"ins pre string"}}, "stringname"},
-		{"Insert missing place", args{"name", []string{"ins"}}, "name"},
-		{"Insert prefix missing string", args{"name", []string{"ins pre"}}, "name"},
-		{"Insert suffix", args{"name", []string{"ins suf string"}}, "namestring"},
-		{"Insert position", args{"name", []string{"ins pos 2 string"}}, "nastringme"},
-		{"Insert after", args{"name", []string{"ins aft nam string"}}, "namstringe"},
+		{"No rules", args{"name", []string{}, 0}, "name"},
+		{"Wrong rule", args{"name", []string{""}, 0}, "name"},
+		{"Insert prefix", args{"name", []string{"ins string pre"}, 0}, "stringname"},
+		{"Insert missing place", args{"name", []string{"ins"}, 0}, "name"},
+		{"Insert prefix missing string", args{"name", []string{"ins pre"}, 0}, "name"},
+		{"Insert suffix", args{"name", []string{"ins string suf"}, 0}, "namestring"},
+		{"Insert position", args{"name", []string{"ins string pos 2"}, 0}, "nastringme"},
+		{"Insert after", args{"name", []string{"ins string aft nam"}, 0}, "namstringe"},
+		{"Insert count", args{"name", []string{"ins 00 pre"}, 0}, "00name"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotRes := doRules(tt.args.name, tt.args.rules); gotRes != tt.wantRes {
+			gotRes := doRules(tt.args.name, tt.args.rules, tt.args.cnt)
+			if gotRes != tt.wantRes {
 				t.Errorf("doRules() = %v, want %v", gotRes, tt.wantRes)
 			}
 		})
 	}
 }
 
-func Test_place(t *testing.T) {
+func Test_insert(t *testing.T) {
 	type args struct {
 		place  string
 		in     string
 		fields []string
+		cnt    int
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantOut string
 	}{
-		{"Prefix", args{"pre", "name", []string{"ins", "pre", "string"}}, "stringname"},
-		{"Suffix", args{"suf", "name", []string{"ins", "suf", "string"}}, "namestring"},
-		{"Position", args{"pos", "name", []string{"ins", "pos", "2", "string"}}, "nastringme"},
-		{"Position missing pos", args{"pos", "name", []string{"ins", "pos", "string"}}, "name"},
-		{"Position missing string", args{"pos", "name", []string{"ins", "pos", "2"}}, "name"},
-		{"Position greater string", args{"pos", "name", []string{"ins", "pos", "5", "string"}}, "name"},
-		{"Position negative", args{"pos", "name", []string{"ins", "pos", "-1", "string"}}, "name"},
-		{"After", args{"aft", "name", []string{"ins", "aft", "am", "string"}}, "namstringe"},
-		{"After with substring not found", args{"aft", "name", []string{"ins", "aft", "xx", "string"}}, "name"},
-		{"After with string missing", args{"aft", "name", []string{"ins", "aft", "xx"}}, "name"},
-		{"After without arguments", args{"aft", "name", []string{"ins", "aft"}}, "name"},
+		{"Prefix", args{"pre", "name", []string{"ins", "string", "pre"}, 0}, "stringname"},
+		{"Suffix", args{"suf", "name", []string{"ins", "string", "suf"}, 0}, "namestring"},
+		{"Position", args{"pos", "name", []string{"ins", "string", "pos", "2"}, 0}, "nastringme"},
+		{"Position missing pos", args{"pos", "name", []string{"ins", "string", "pos"}, 0}, "name"},
+		{"Position missing string", args{"pos", "name", []string{"ins", "pos", "2"}, 0}, "name"},
+		{"Position greater string", args{"pos", "name", []string{"ins", "string", "pos", "5"}, 0}, "name"},
+		{"Position negative", args{"pos", "name", []string{"ins", "string", "pos", "-1"}, 0}, "name"},
+		{"After", args{"aft", "name", []string{"ins", "string", "aft", "am"}, 0}, "namstringe"},
+		{"After with substring not found", args{"aft", "name", []string{"ins", "string", "aft", "xx"}, 0}, "name"},
+		{"After with string missing", args{"aft", "name", []string{"ins", "aft", "xx"}, 0}, "name"},
+		{"After without arguments", args{"aft", "name", []string{"ins", "aft"}, 0}, "name"},
+		{"Wrong place", args{"xxx", "name", []string{"ins", "xxx"}, 0}, "name"},
+		{"count", args{"pre", "name", []string{"ins", "000", "pre"}, 0}, "000name"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if gotOut := place(tt.args.place, tt.args.in, tt.args.fields); gotOut != tt.wantOut {
+			gotOut := insert(tt.args.place, tt.args.in, tt.args.fields, tt.args.cnt)
+			if gotOut != tt.wantOut {
 				t.Errorf("place() = %v, want %v", gotOut, tt.wantOut)
 			}
 		})
