@@ -76,7 +76,7 @@ func (i *batchView) layout(g *gocui.Gui) error {
 		i.rView.Frame = true
 		i.rView.Highlight = true
 		i.rView.Title = "Output"
-		i.rView.Autoscroll = true
+		i.rView.Autoscroll = false
 	}
 	i.rView.Clear()
 	i.preview(g, i.lView)
@@ -90,8 +90,41 @@ func (i *batchView) keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("", gocui.KeyF5, gocui.ModNone, i.quit); err != nil {
 		log.Panicln(err)
 	}
-	//TODO: implement tab-switching
-	//TODO: implement scrolling in results
+	if err := g.SetKeybinding("", gocui.KeyTab, gocui.ModNone, i.tabSwitch); err != nil {
+		log.Panicln(err)
+	}
+	if err := g.SetKeybinding("Output", gocui.KeyArrowDown, gocui.ModNone, i.arrowDown); err != nil {
+		log.Panicln(err)
+	}
+	if err := g.SetKeybinding("Output", gocui.KeyArrowUp, gocui.ModNone, i.arrowUp); err != nil {
+		log.Panicln(err)
+	}
+	return nil
+}
+
+func (i *batchView) arrowDown(g *gocui.Gui, v *gocui.View) error {
+	_, cy := v.Cursor()
+	_, oy := v.Origin()
+	if cy+oy < len(v.ViewBufferLines())-1 {
+		v.MoveCursor(0, 1, true)
+	}
+	return nil
+}
+func (i *batchView) arrowUp(g *gocui.Gui, v *gocui.View) error {
+	_, cy := v.Cursor()
+	_, oy := v.Origin()
+	if cy+oy > 0 {
+		v.MoveCursor(0, -1, true)
+	}
+	return nil
+}
+
+func (i *batchView) tabSwitch(g *gocui.Gui, v *gocui.View) error {
+	if v == i.rView {
+		g.SetCurrentView(i.name)
+	} else {
+		g.SetCurrentView("Output")
+	}
 	return nil
 }
 
