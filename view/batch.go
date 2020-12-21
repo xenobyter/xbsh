@@ -145,7 +145,7 @@ func (i *batchView) preview(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func (i *batchView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) { 
+func (i *batchView) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
 	ox, oy := v.Origin()
 	cx, cy := v.Cursor()
 	_, my := v.Size()
@@ -213,32 +213,37 @@ func preview(dir string, rules []string) (out []string) {
 	return
 }
 
-// doRules uses the following syntax
-// Insert: ins $place string
-// $place can be one of: "pre", "suf","pos" for a fixed position or "aft $string" to insert after a specific  substring
+// doRules uses the following syntax: function [args]
+// function can be one of
+// "ins" for insert
 func doRules(name string, rules []string, cnt int) string {
 	for _, r := range rules {
 		fields := strings.Fields(r)
 
-		if len(fields) < 3 {
+		if len(fields) == 0 {
 			return name
 		}
 		switch fields[0] {
 		case "ins":
-			name = insert(fields[2], name, fields, cnt)
+			if len(fields) < 3 {
+				return name
+			}
+			name = ins(fields[2], name, fields, cnt)
+		case "del":
+			name = del(name, fields)
 		}
 	}
 	return name
 }
 
-// Insert can be used with: "pre", "suf","pos" for a fixed position or "aft" to insert after a specific  substring
+// ins can be used with: "pre", "suf","pos" for a fixed position or "aft" to insert after a specific  substring.
 // ins string pre
 // ins string suf
 // ins string pos 2
 // ins string aft substring
-// If string does parse as int, insert increments string for each file
-// For details see tests.
-func insert(place, in string, fields []string, cnt int) (out string) {
+// If string does parse as int, ins increments string for each file.
+// See tests fpr details.
+func ins(place, in string, fields []string, cnt int) (out string) {
 	//handle increments
 	if start, err := strconv.ParseInt(fields[1], 10, 0); err == nil {
 		l := fmt.Sprint(len(fields[1]))
@@ -272,4 +277,48 @@ func insert(place, in string, fields []string, cnt int) (out string) {
 		return in
 	}
 	return
+}
+
+// del can be used to delete a string.
+// del string (first occurence)
+// del string pre
+// del string suf
+// del string any (any occurence)
+// del 1 (from position 1 to end of filename)
+// del 1 3 (1 to 3)
+// del -3 (last 3 runes)
+func del(name string, fields []string) string {
+	switch len(fields) {
+	case 2:
+		subPos := strings.Index(name, fields[1])
+		subLen := utf8.RuneCountInString(fields[1])
+		from, err := strconv.ParseInt(fields[1], 10, 0)
+		switch {
+		case subPos > -1:
+			return name[:subPos] + name[subPos+subLen:]
+		case err == nil && from > 0:
+			return name[:from-1]
+		case err == nil && from < 0:
+			offset := from + int64(utf8.RuneCountInString(name))
+			if offset > 0 {
+				return name[:offset]
+			}
+		}
+	case 3:
+		from, e1 := strconv.ParseInt(fields[1], 10, 0)
+		to, e2 := strconv.ParseInt(fields[2], 10, 0)
+		switch {
+		case fields[2] == "pre":
+			return strings.TrimPrefix(name, fields[1])
+		case fields[2] == "suf":
+			return strings.TrimSuffix(name, fields[1])
+		case fields[2] == "any":
+			return strings.ReplaceAll(name, fields[1], "")
+		case e1 != nil || e2 != nil:
+			return name
+		case from > 0 && to > from && to <= int64(utf8.RuneCountInString(name)):
+			return name[:from-1] + name[to:]
+		}
+	}
+	return name
 }

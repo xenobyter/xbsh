@@ -78,7 +78,7 @@ func Test_doRules(t *testing.T) {
 	}
 }
 
-func Test_insert(t *testing.T) {
+func Test_ins(t *testing.T) {
 	type args struct {
 		place  string
 		in     string
@@ -106,9 +106,43 @@ func Test_insert(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotOut := insert(tt.args.place, tt.args.in, tt.args.fields, tt.args.cnt)
+			gotOut := ins(tt.args.place, tt.args.in, tt.args.fields, tt.args.cnt)
 			if gotOut != tt.wantOut {
 				t.Errorf("place() = %v, want %v", gotOut, tt.wantOut)
+			}
+		})
+	}
+}
+
+func Test_del(t *testing.T) {
+	type args struct {
+		name   string
+		fields []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"no args", args{"name", []string{}}, "name"},
+		{"del string", args{"name", []string{"del", "me"}}, "na"},
+		{"del string at start", args{"name", []string{"del", "na"}}, "me"},
+		{"del prefix", args{"name", []string{"del", "n", "pre"}}, "ame"},
+		{"del suffix", args{"name", []string{"del", "e", "suf"}}, "nam"},
+		{"del any substring", args{"namename", []string{"del", "am", "any"}}, "nene"},
+		{"del any no find", args{"namename", []string{"del", "xy", "any"}}, "namename"},
+		{"del from pos 3", args{"namename", []string{"del", "3"}}, "na"},
+		{"del from pos 1", args{"namename", []string{"del", "1"}}, ""},
+		{"del from pos 2", args{".git", []string{"del", "5", "6"}}, ".git"},
+		{"del from pos 0", args{"namename", []string{"del", "0"}}, "namename"},
+		{"del from pos 2 to 3", args{"namename", []string{"del", "2", "3"}}, "nename"},
+		{"del last 3", args{"namename", []string{"del", "-3"}}, "namen"},
+		{"del last n with big n", args{"namename", []string{"del", "-10"}}, "namename"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := del(tt.args.name, tt.args.fields); got != tt.want {
+				t.Errorf("del() = %v, want %v", got, tt.want)
 			}
 		})
 	}

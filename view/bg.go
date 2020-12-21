@@ -90,7 +90,7 @@ func (i *bgView) keybindings(g *gocui.Gui) {
 	if err := g.SetKeybinding("", gocui.KeyTab, gocui.ModNone, tab); err != nil {
 		log.Panicln(err)
 	}
-	if err := g.SetKeybinding("Jobs", gocui.KeyDelete, gocui.ModNone, delete); err != nil {
+	if err := g.SetKeybinding("Jobs", gocui.KeyDelete, gocui.ModNone, deleteJob); err != nil {
 		log.Panicln(err)
 	}
 }
@@ -123,7 +123,7 @@ func outSingleJob(lv, rv *gocui.View) {
 	fmt.Fprint(rv, term.AnsiErr+string(stderr)+term.AnsiNormal)
 }
 
-func delete(g *gocui.Gui, v *gocui.View) error {
+func deleteJob(g *gocui.Gui, v *gocui.View) error {
 	cy, oy := getY(v)
 	exec.BgDelete(cy + oy)
 	outList(v)
