@@ -147,3 +147,32 @@ func Test_del(t *testing.T) {
 		})
 	}
 }
+
+func Test_rep(t *testing.T) {
+	type args struct {
+		name   string
+		fields []string
+		cnt    int
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"no args", args{"", []string{}, 0}, ""},
+		{"First occurence", args{"name", []string{"rep", "am", "yy"}, 0}, "nyye"},
+		{"First occurence, no find", args{"name", []string{"rep", "xx", "yy"}, 0}, "name"},
+		{"Prefix", args{"name", []string{"rep", "na", "yy", "pre"}, 0}, "yyme"},
+		{"Suffix", args{"name", []string{"rep", "me", "yy", "suf"}, 0}, "nayy"},
+		{"Any", args{"namename", []string{"rep", "am", "yy", "any"}, 0}, "nyyenyye"},
+		{"Incrementing", args{"namename", []string{"rep", "am", "001", "any"}, 1}, "n002en002e"},
+		{"Incrementing first", args{"namename", []string{"rep", "am", "001"}, 1}, "n002ename"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := rep(tt.args.name, tt.args.fields, tt.args.cnt); got != tt.want {
+				t.Errorf("rep() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

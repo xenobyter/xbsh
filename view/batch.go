@@ -215,22 +215,28 @@ func preview(dir string, rules []string) (out []string) {
 
 // doRules uses the following syntax: function [args]
 // function can be one of
-// "ins" for insert
+// "ins" for insert, "del" for delete, "rep" for replace
 func doRules(name string, rules []string, cnt int) string {
 	for _, r := range rules {
 		fields := strings.Fields(r)
+		l := len(fields)
 
-		if len(fields) == 0 {
+		if l == 0 {
 			return name
 		}
 		switch fields[0] {
 		case "ins":
-			if len(fields) < 3 {
+			if l < 3 {
 				return name
 			}
 			name = ins(fields[2], name, fields, cnt)
 		case "del":
 			name = del(name, fields)
+		case "rep":
+			if l < 3 {
+				return name
+			}
+			name = rep(name, fields, cnt)
 		}
 	}
 	return name
@@ -318,6 +324,40 @@ func del(name string, fields []string) string {
 			return name
 		case from > 0 && to > from && to <= int64(utf8.RuneCountInString(name)):
 			return name[:from-1] + name[to:]
+		}
+	}
+	return name
+}
+
+// rep is used to replace substrings
+// rep oldStr newStr (first occurence)
+// rep oldStr newStr pre
+// rep oldStr newStr suf
+// rep oldStr newStr any
+// If newStr parses as Integer, rep will increment it for each file
+func rep(name string, fields []string, cnt int) string {
+	l := len(fields)
+	if l >= 3 {
+		if start, e := strconv.ParseInt(fields[2], 10, 0); e == nil {
+			l := fmt.Sprint(len(fields[2]))
+			fields[2] = fmt.Sprintf("%0"+l+"d", int(start)+cnt)
+		}
+	}
+	switch l {
+	case 3:
+		return strings.Replace(name, fields[1], fields[2], 1)
+	case 4:
+		switch fields[3] {
+		case "pre":
+			if strings.HasPrefix(name, fields[1]) {
+				return strings.Replace(name, fields[1], fields[2], 1)
+			}
+		case "suf":
+			if strings.HasSuffix(name, fields[1]) {
+				return strings.TrimSuffix(name, fields[1]) + fields[2]
+			}
+		case "any":
+			return strings.ReplaceAll(name, fields[1], fields[2])
 		}
 	}
 	return name
