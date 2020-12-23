@@ -67,6 +67,9 @@ func Test_doRules(t *testing.T) {
 		{"Insert position", args{"name", []string{"ins string pos 2"}, 0}, "nastringme"},
 		{"Insert after", args{"name", []string{"ins string aft nam"}, 0}, "namstringe"},
 		{"Insert count", args{"name", []string{"ins 00 pre"}, 0}, "00name"},
+		{"Dont Insert after inc", args{"name", []string{"inc test","ins test pre"}, 0}, "name"},
+		{"Insert after inc", args{"name", []string{"inc .am.","ins test pre"}, 0}, "testname"},
+		{"Dont Insert after exc", args{"name", []string{"exc .am.","ins test pre"}, 0}, "name"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

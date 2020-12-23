@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -217,6 +218,8 @@ func preview(dir string, rules []string) (out []string) {
 // function can be one of
 // "ins" for insert, "del" for delete, "rep" for replace
 func doRules(name string, rules []string, cnt int) string {
+	include := regexp.MustCompile(".*")
+	exclude := regexp.MustCompile("!.*")
 	for _, r := range rules {
 		fields := strings.Fields(r)
 		l := len(fields)
@@ -224,19 +227,24 @@ func doRules(name string, rules []string, cnt int) string {
 		if l == 0 {
 			return name
 		}
-		switch fields[0] {
-		case "ins":
+		f := fields[0]
+		switch {
+		case f == "ins" && include.MatchString(name) && !exclude.MatchString(name):
 			if l < 3 {
 				return name
 			}
 			name = ins(fields[2], name, fields, cnt)
-		case "del":
+		case f == "del" && include.MatchString(name) && !exclude.MatchString(name):
 			name = del(name, fields)
-		case "rep":
+		case f == "rep" && include.MatchString(name) && !exclude.MatchString(name):
 			if l < 3 {
 				return name
 			}
 			name = rep(name, fields, cnt)
+		case f == "inc":
+			include = inc(fields)
+		case f == "exc":
+			exclude = exc(fields)
 		}
 	}
 	return name
@@ -361,4 +369,21 @@ func rep(name string, fields []string, cnt int) string {
 		}
 	}
 	return name
+}
+
+func inc(fields []string) (reg *regexp.Regexp) {
+	reg = regexp.MustCompile(".*")
+	if len(fields) < 2 {
+		return
+	}
+	reg, _ = regexp.Compile(fields[1])
+	return
+}
+func exc(fields []string) (reg *regexp.Regexp) {
+	reg = regexp.MustCompile("!.*")
+	if len(fields) < 2 {
+		return
+	}
+	reg, _ = regexp.Compile(fields[1])
+	return
 }
