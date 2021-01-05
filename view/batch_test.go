@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func Test_preview(t *testing.T) {
@@ -67,13 +68,14 @@ func Test_doRules(t *testing.T) {
 		{"Insert position", args{"name", []string{"ins string pos 2"}, 0}, "nastringme"},
 		{"Insert after", args{"name", []string{"ins string aft nam"}, 0}, "namstringe"},
 		{"Insert count", args{"name", []string{"ins 00 pre"}, 0}, "00name"},
-		{"Dont Insert after inc", args{"name", []string{"inc test","ins test pre"}, 0}, "name"},
-		{"Insert after inc", args{"name", []string{"inc .am.","ins test pre"}, 0}, "testname"},
-		{"Dont Insert after exc", args{"name", []string{"exc .am.","ins test pre"}, 0}, "name"},
+		{"Dont Insert after inc", args{"name", []string{"inc test", "ins test pre"}, 0}, "name"},
+		{"Insert after inc", args{"name", []string{"inc .am.", "ins test pre"}, 0}, "testname"},
+		{"Dont Insert after exc", args{"name", []string{"exc .am.", "ins test pre"}, 0}, "name"},
+		{"Uppercase after ins", args{"name", []string{"ins test pre", "cas upp"}, 0}, "Testname"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes := doRules(tt.args.name, tt.args.rules, tt.args.cnt)
+			gotRes := doRules(tt.args.name, tt.args.rules, tt.args.cnt, time.Now())
 			if gotRes != tt.wantRes {
 				t.Errorf("doRules() = %v, want %v", gotRes, tt.wantRes)
 			}
@@ -175,6 +177,69 @@ func Test_rep(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := rep(tt.args.name, tt.args.fields, tt.args.cnt); got != tt.want {
 				t.Errorf("rep() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_cas(t *testing.T) {
+	type args struct {
+		name   string
+		fields []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"Empty args", args{"", []string{}}, ""},
+		{"First letter upp", args{"name", []string{"cas", "upp"}}, "Name"},
+		{"First letter upp umlauts", args{"äame", []string{"cas", "upp"}}, "Äame"},
+		{"First letter low", args{"Name", []string{"cas", "low"}}, "name"},
+		{"First letter of first word only upp", args{"name name", []string{"cas", "upp"}}, "Name name"},
+		{"First letter of first word only low", args{"NAME NAME", []string{"cas", "low"}}, "nAME NAME"},
+		{"Empty name", args{"", []string{"cas", "upp"}}, ""},
+		{"Name with one char upp", args{"x", []string{"cas", "upp"}}, "X"},
+		{"Name with one char low", args{"X", []string{"cas", "low"}}, "x"},
+		{"Every word upp", args{"name name", []string{"cas", "upp", "wrd"}}, "Name Name"},
+		{"Every word low", args{"Name name", []string{"cas", "low", "wrd"}}, "name name"},
+		{"Every word low umlauts", args{"Äame Äame", []string{"cas", "low", "wrd"}}, "äame äame"},
+		{"Every word low one char word", args{"Ä e", []string{"cas", "low", "wrd"}}, "ä e"},
+		{"Any char upp", args{"name name", []string{"cas", "upp", "any"}}, "NAME NAME"},
+		{"Any char low", args{"NAME NAME", []string{"cas", "low", "any"}}, "name name"},
+		{"Any m upp", args{"name name", []string{"cas", "upp", "any", "m"}}, "naMe naMe"},
+		{"Any m low", args{"NAME NAME", []string{"cas", "low", "any", "M"}}, "NAmE NAmE"},
+		{"Any with empty char", args{"name name", []string{"cas", "upp", "any", ""}}, "name name"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := cas(tt.args.name, tt.args.fields); got != tt.want {
+				t.Errorf("cas() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_dat(t *testing.T) {
+	type args struct {
+		name   string
+		fields []string
+		t      time.Time
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"Empty args", args{"", []string{}, time.Now()}, ""},
+		{"dat only", args{"name", []string{"dat"}, time.Unix(0, 0)}, "1970-01-01 01:00:00"},
+		{"dat pre", args{"name", []string{"dat", "pre"}, time.Unix(0, 0)}, "1970-01-01 01:00:00 name"},
+		{"dat suf", args{"name", []string{"dat", "suf"}, time.Unix(0, 0)}, "name 1970-01-01 01:00:00"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := dat(tt.args.name, tt.args.fields, tt.args.t); got != tt.want {
+				t.Errorf("dat() = %v, want %v", got, tt.want)
 			}
 		})
 	}

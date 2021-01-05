@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/awesome-gocui/gocui"
@@ -205,7 +206,7 @@ func preview(dir string, rules []string) (out []string) {
 		if l := utf8.RuneCountInString(f.Name()); l > longestName {
 			longestName = l
 		}
-		right[i] = doRules(left[i], rules, i)
+		right[i] = doRules(left[i], rules, i, f.ModTime())
 	}
 	for i, f := range files {
 		out = append(out, left[i]+strings.Repeat(" ", longestName-len(f.Name()))+" => "+right[i])
@@ -217,7 +218,7 @@ func preview(dir string, rules []string) (out []string) {
 // doRules uses the following syntax: function [args]
 // function can be one of
 // "ins" for insert, "del" for delete, "rep" for replace
-func doRules(name string, rules []string, cnt int) string {
+func doRules(name string, rules []string, cnt int, t time.Time) string {
 	include := regexp.MustCompile(".*")
 	exclude := regexp.MustCompile("!.*")
 	for _, r := range rules {
@@ -245,6 +246,10 @@ func doRules(name string, rules []string, cnt int) string {
 			include = inc(fields)
 		case f == "exc":
 			exclude = exc(fields)
+		case f == "cas":
+			name = cas(name, fields)
+		case f == "dat":
+			name = dat(name, fields, t)
 		}
 	}
 	return name
@@ -379,6 +384,7 @@ func inc(fields []string) (reg *regexp.Regexp) {
 	reg, _ = regexp.Compile(fields[1])
 	return
 }
+
 func exc(fields []string) (reg *regexp.Regexp) {
 	reg = regexp.MustCompile("!.*")
 	if len(fields) < 2 {
@@ -386,4 +392,71 @@ func exc(fields []string) (reg *regexp.Regexp) {
 	}
 	reg, _ = regexp.Compile(fields[1])
 	return
+}
+
+// cas is used to change cases between upper and lower
+// cas upp (first letter)
+// cas upp wrd (every word)
+// cas upp any [string]
+// cas low (first letter)
+// cas low wrd
+// cas low any [string]
+func cas(name string, fields []string) string {
+	l := len(fields)
+	if l < 2 || name == "" {
+		return name
+	}
+	f := fields[1]
+	switch {
+	case f == "upp":
+		switch {
+		case l == 2:
+			r := strings.Split(name, "")
+			return strings.ToUpper(r[0]) + strings.Join(r[1:], "")
+		case l == 3 && fields[2] == "wrd":
+			return strings.Title(name)
+		case l == 3 && fields[2] == "any":
+			return strings.ToUpper(name)
+		case l == 4 && fields[2] == "any":
+			return strings.ReplaceAll(name, fields[3], strings.ToUpper(fields[3]))
+		}
+	case f == "low":
+		switch {
+		case l == 2:
+			r := strings.Split(name, "")
+			return strings.ToLower(r[0]) + strings.Join(r[1:], "")
+		case l == 3 && fields[2] == "wrd":
+			res := ""
+			for _, w := range strings.Fields(name) {
+				r := strings.Split(w, "")
+				res += strings.ToLower(string(r[0])) + strings.Join(r[1:], "") + " "
+			}
+			return strings.TrimSpace(res)
+		case l == 3 && fields[2] == "any":
+			return strings.ToLower(name)
+		case l == 4 && fields[2] == "any":
+			return strings.ReplaceAll(name, fields[3], strings.ToLower(fields[3]))
+		}
+	default:
+		return name
+	}
+	return name
+}
+
+// dat is used to add the a date as part of the filename
+// dat (use date as name)
+// dat pre (use date as prefix)
+// dat suf (use date as suffix)
+func dat(name string, fields []string, t time.Time) string {
+	l := len(fields)
+	switch {
+	case l == 1:
+		return t.Local().Format("2006-01-02 15:04:05")
+	case l == 2 && fields[1] == "pre":
+		return t.Local().Format("2006-01-02 15:04:05") + " " + name
+	case l == 2 && fields[1] == "suf":
+		return name + " " + t.Local().Format("2006-01-02 15:04:05")
+	}
+	return name
+
 }
