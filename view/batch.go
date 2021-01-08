@@ -206,7 +206,7 @@ func preview(dir string, rules []string) (out []string) {
 		if l := utf8.RuneCountInString(f.Name()); l > longestName {
 			longestName = l
 		}
-		right[i] = doRules(left[i], rules, i, f.ModTime())
+		right[i] = doRules(left[i], rules, i, f.ModTime(), f.IsDir())
 	}
 	for i, f := range files {
 		out = append(out, left[i]+strings.Repeat(" ", longestName-len(f.Name()))+" => "+right[i])
@@ -218,18 +218,24 @@ func preview(dir string, rules []string) (out []string) {
 // doRules uses the following syntax: function [args]
 // function can be one of
 // "ins" for insert, "del" for delete, "rep" for replace
-func doRules(name string, rules []string, cnt int, t time.Time) string {
+func doRules(name string, rules []string, cnt int, t time.Time, isDir bool) string {
 	include := regexp.MustCompile(".*")
 	exclude := regexp.MustCompile("!.*")
+	mode := "a"
 	for _, r := range rules {
 		fields := strings.Fields(r)
 		l := len(fields)
-
 		if l == 0 {
 			return name
 		}
 		f := fields[0]
 		switch {
+		case f == "mod":
+			mode = mod(fields)
+		case isDir && mode == "f":
+			break
+		case !isDir && mode == "d":
+			break
 		case f == "ins" && include.MatchString(name) && !exclude.MatchString(name):
 			if l < 3 {
 				return name
@@ -459,4 +465,20 @@ func dat(name string, fields []string, t time.Time) string {
 	}
 	return name
 
+}
+
+// mod is used to restrict rules to directorys or files
+// mod dir
+// mod fil
+// mod all
+func mod(fields []string) string {
+	l := len(fields)
+	switch {
+	case l == 2 && fields[1] == "fil":
+		return "f"
+	case l == 2 && fields[1] == "dir":
+		return "d"
+	default:
+		return "a"
+	}
 }

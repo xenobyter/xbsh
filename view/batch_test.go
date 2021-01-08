@@ -75,7 +75,7 @@ func Test_doRules(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes := doRules(tt.args.name, tt.args.rules, tt.args.cnt, time.Now())
+			gotRes := doRules(tt.args.name, tt.args.rules, tt.args.cnt, time.Now(), false)
 			if gotRes != tt.wantRes {
 				t.Errorf("doRules() = %v, want %v", gotRes, tt.wantRes)
 			}
@@ -240,6 +240,28 @@ func Test_dat(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := dat(tt.args.name, tt.args.fields, tt.args.t); got != tt.want {
 				t.Errorf("dat() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_mod(t *testing.T) {
+	type args struct {
+		fields []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"Empty args",args{[]string{}},"a"},
+		{"mod file",args{[]string{"mod", "fil"}},"f"},
+		{"mod directory",args{[]string{"mod", "dir"}},"d"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := mod(tt.args.fields); got != tt.want {
+				t.Errorf("mode() = %v, want %v", got, tt.want)
 			}
 		})
 	}
