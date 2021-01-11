@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -101,6 +102,9 @@ func (i *batchView) keybindings(g *gocui.Gui) error {
 	if err := g.SetKeybinding("Output", gocui.KeyArrowUp, gocui.ModNone, i.arrowUp); err != nil {
 		log.Panicln(err)
 	}
+	if err := g.SetKeybinding("", gocui.KeyF6, gocui.ModNone, i.rename); err != nil {
+		log.Panicln(err)
+	}
 	return nil
 }
 
@@ -141,6 +145,18 @@ func (i *batchView) preview(g *gocui.Gui, v *gocui.View) error {
 		return err
 	}
 	files := preview(wd, i.lView.BufferLines())
+	for _, f := range files {
+		fmt.Fprintln(i.rView, f)
+	}
+	return nil
+}
+
+func (i *batchView) rename(g *gocui.Gui, v *gocui.View) error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	files := rename(wd, i.lView.BufferLines())
 	for _, f := range files {
 		fmt.Fprintln(i.rView, f)
 	}
@@ -211,6 +227,19 @@ func preview(dir string, rules []string) (out []string) {
 	for i, f := range files {
 		out = append(out, left[i]+strings.Repeat(" ", longestName-len(f.Name()))+" => "+right[i])
 
+	}
+	return
+}
+
+func rename(dir string, rules []string) (out []string) {
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	for i, f := range files {
+		new := doRules(f.Name(), rules, i, f.ModTime(), f.IsDir())
+		os.Rename(filepath.Join(dir,f.Name()),filepath.Join(dir,new))
+		out=append(out, new)
 	}
 	return
 }

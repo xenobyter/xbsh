@@ -254,14 +254,48 @@ func Test_mod(t *testing.T) {
 		args args
 		want string
 	}{
-		{"Empty args",args{[]string{}},"a"},
-		{"mod file",args{[]string{"mod", "fil"}},"f"},
-		{"mod directory",args{[]string{"mod", "dir"}},"d"},
+		{"Empty args", args{[]string{}}, "a"},
+		{"mod file", args{[]string{"mod", "fil"}}, "f"},
+		{"mod directory", args{[]string{"mod", "dir"}}, "d"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := mod(tt.args.fields); got != tt.want {
 				t.Errorf("mode() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_rename(t *testing.T) {
+	type args struct {
+		dir   string
+		rules []string
+	}
+	dir, err := ioutil.TempDir("", "xbsh")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer os.RemoveAll(dir)
+	os.Create(filepath.Join(dir, "file1"))
+	os.Create(filepath.Join(dir, "file2"))
+	tests := []struct {
+		name    string
+		args    args
+		wantOut []string
+	}{
+		{"Simple insert", args{dir, []string{"ins pre pre"}}, []string{"prefile1", "prefile2"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if gotOut := rename(tt.args.dir, tt.args.rules); !reflect.DeepEqual(gotOut, tt.wantOut) {
+				t.Errorf("rename() = %v, want %v", gotOut, tt.wantOut)
+			}
+			for i, want := range tt.wantOut {
+				log.Println(filepath.Join(dir, want))
+				if _, err := os.Stat(filepath.Join(dir, want)); os.IsNotExist(err) {
+					t.Errorf("rename() failed for %v", tt.wantOut[i])
+				}
 			}
 		})
 	}
