@@ -199,6 +199,9 @@ func Read(prompt string, test ...mockInput) (line string) {
 		//Background jobs
 		case k == keyboard.KeyF4:
 			openView(view.BG, "")
+		//Background renamer
+		case k == keyboard.KeyF5:
+			openView(view.Batch, "")
 		//cd
 		case k == keyboard.KeyF3:
 			wd, _ := os.Getwd()
