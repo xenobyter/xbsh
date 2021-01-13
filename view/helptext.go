@@ -36,4 +36,51 @@ pipesep=|
 maxentries=1000
 delExitCmd=exit
 --------------------------------------------------------
+
+Renaming files in bulk:
+With pressing <F5> a view is opened for renaming files or diretories in bulk. The left part of this view shows a simple editor to write down rules for renaming. The right part shows files and folders of the current diretory and previews the effect of currently active rules. once the preview shows the wanted result, pressing <F6> actually performs the renaming. Rules are as follows:
+--------------------------------------------------------
+Insert
+ins string pre 				insert "string" as prefix
+ins string suf 				insert "string" as suffix
+ins string pos 2			insert "string" at position 2
+ins string aft substrings	insert "string" aft first occurence of substring
+In case string parses as integer, ins increments string for every file
+
+Delete
+del string 					delete first occurence of string
+del string pre 				delete string if its the prefix
+del string suf 				delete string it its the suffix
+del string any 				delete any matching strings
+del 1						delete from position 1 to end
+del 1 3						delete from position 1 to 3
+del -3						delete last 3 characters
+
+Replace
+rep old new 				replace the first occurence of "old" with "new"
+rep old new pre 			replace "old" with "new" when old is a prefix
+rep old new suf 			replace "old" with "new" when old is a suffix
+rep old new any 			replace any occurence of "old" with "new"
+In case "new" parses as integer, ins increments string for every file
+
+Change capitalization
+case upp 					first Char to uppercase
+case upp wrd 				first char of every word uppercase
+case upp any [string]		any matching substring to uppercase, on empty string, any char is uppercase
+Use low instead of upp to lowercase characters
+
+Date
+dat 						use filedate as name
+dat pre 					use filedate as prefix
+dat suf 					use filedate as suffix
+
+Rules for files only or directoies only
+mod all 					following rules apply to files and diretories
+mod fil 					rules apply to files only
+mod dir 					rules apply to directories only
+
+Include and exclude
+inc regex 					following rules apply only to files or folders that match regex 
+exc regex 					following rules don't apply to files or folders that match regex
+--------------------------------------------------------
 `
