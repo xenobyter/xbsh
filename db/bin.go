@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/fsnotify/fsnotify"
 )
 
 // dirScan takes a directory and writes its contents into db.
@@ -35,6 +37,7 @@ func getPath() []string {
 func PathCache() {
 	for _, p := range getPath() {
 		dirScan(p)
+		go makeNotify(p)
 	}
 }
 
@@ -61,4 +64,46 @@ func PathComplete(item string) (completions []os.FileInfo) {
 	return
 }
 
-//TODO: #72 Updates for bin with inotify
+func makeNotify(dir string) {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer watcher.Close()
+
+	done := make(chan bool)
+	go func() {
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+				processNotifyEvent(event.Name, event.Op)
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				log.Println("error:", err)
+			}
+		}
+	}()
+
+	err = watcher.Add(dir)
+	if err != nil {
+		log.Fatal(err)
+	}
+	<-done
+}
+
+func processNotifyEvent(file string, op fsnotify.Op) {
+	switch {
+	case op == fsnotify.Create:
+		db.Exec("INSERT INTO bin(full, item, path) VALUES(?, ?, ?)",
+			file,
+			filepath.Base(file),
+			filepath.Dir(file))
+	case op == fsnotify.Remove || op == fsnotify.Rename:
+		db.Exec("DELETE FROM bin WHERE full = ?", file)
+	}
+}
