@@ -97,6 +97,35 @@ func move(dx, lx, ox, ll, ld int) (nx, no int) {
 	return
 }
 
+func jump(line string, dx, lx, ox, ll, ld int) (nx, no int) {
+	for nx = lx + dx; ; nx += dx {
+		if nx != lx+dx && nx >= 0 && nx < ll && line[nx] == ' ' {
+			nx++
+			break
+		}
+
+		//respect line borders
+		if nx < 0 {
+			nx = 0
+			break
+		}
+		if nx > ll {
+			nx = ll
+			break
+		}
+	}
+	//3. position ox
+	switch {
+	case nx-ox > ld:
+		no = nx - ld
+	case nx < ox:
+		no = nx
+	default:
+		no = ox
+	}
+	return
+}
+
 // Read one line until <Enter> and returns the finished line.
 // It handles F-Keys.
 func Read(prompt string, test ...mockInput) (line string) {
@@ -156,7 +185,10 @@ func Read(prompt string, test ...mockInput) (line string) {
 			lx, ox = move(-lx, lx, ox, ll, ld)
 		case k == keyboard.KeyEnd:
 			lx, ox = move(ll, lx, ox, ll, ld)
-			//TODO: #74 Jump words
+		case k == keyboard.KeyCtrlL:
+			lx, ox = jump(line, -1, lx, ox, ll, ld)
+		case k == keyboard.KeyCtrlR:
+			lx, ox = jump(line, 1, lx, ox, ll, ld)
 		//Delete
 		case k == keyboard.KeyBackspace || k == keyboard.KeyBackspace2:
 			if lx > 0 {

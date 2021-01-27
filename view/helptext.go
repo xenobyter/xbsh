@@ -1,7 +1,7 @@
 package view
 
 const helptext = `Enter commands:
-Write to command line and hit <CR>.
+Write to command line and hit <CR>. Use <LeftArrow> and <RightArrow> to move your cursor by one char. Jump one word with <CTRL-L> and <CTRL-R>.
 
 Help: 
 Scroll up and down with arrow keys.

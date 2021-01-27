@@ -1,3 +1,6 @@
+/*
+Package view is used to implement all gocui-based views
+*/
 package view
 
 import (

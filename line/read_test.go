@@ -175,3 +175,39 @@ func Test_delete(t *testing.T) {
 		})
 	}
 }
+
+func Test_jump(t *testing.T) {
+	type args struct {
+		line string
+		dx   int
+		lx   int
+		ox   int
+		ll   int
+		ld   int
+	}
+	tests := []struct {
+		name   string
+		args   args
+		wantNx int
+		wantNo int
+	}{
+		{"Jump word right", args{"one two", 1, 0, 0, 7, 100}, 4, 0},
+		{"Jump word left", args{"one two", -1, 7, 0, 7, 100}, 4, 0},
+		{"Jump right to end", args{"onetwo", 1, 0, 0, 6, 100}, 6, 0},
+		{"Jump left to start", args{"onetwo", -1, 3, 0, 6, 100}, 0, 0},
+		{"Jump left from space", args{"one two", -1, 3, 0, 6, 100}, 0, 0},
+		{"Jump left from word start", args{"one two", -1, 4, 0, 6, 100}, 0, 0},
+		{"Jump word over ld", args{"one two", 1, 0, 0, 7, 3}, 4, 1},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotNx, gotNo := jump(tt.args.line, tt.args.dx, tt.args.lx, tt.args.ox, tt.args.ll, tt.args.ld)
+			if gotNx != tt.wantNx {
+				t.Errorf("jump() gotNx = %v, want %v", gotNx, tt.wantNx)
+			}
+			if gotNo != tt.wantNo {
+				t.Errorf("jump() gotNo = %v, want %v", gotNo, tt.wantNo)
+			}
+		})
+	}
+}
