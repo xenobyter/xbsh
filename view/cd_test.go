@@ -21,8 +21,8 @@ func Test_subDirs(t *testing.T) {
 		args    args
 		wantRes string
 	}{
-		{"find d1, d2", args{dir},"d1\nd2"},
-		{"don't find file", args{dir+"/d1"},"d11"},
+		{"find d1, d2", args{dir},"/d1\n/d2"},
+		{"don't find file", args{dir+"/d1"},"/d11"},
 	}
 
 	os.MkdirAll(dir + "/d1/d11/d111", os.ModePerm)

@@ -102,7 +102,7 @@ func (i *cdView) quit(g *gocui.Gui, v *gocui.View) error {
 		if !strings.HasSuffix(i.line, cfg.PathSep) {
 			i.line += cfg.PathSep
 		}
-		i.line += v.BufferLines()[cy+oy]
+		i.line += v.BufferLines()[cy+oy][1:]
 	}
 	return gocui.ErrQuit
 }
@@ -184,7 +184,7 @@ func subDirs(path string) (res string) {
 	}
 	for _, f := range files {
 		if f.IsDir() {
-			res += f.Name() + "\n"
+			res += cfg.PathSep + f.Name() + "\n"
 		}
 	}
 	return strings.TrimSuffix(res, "\n")

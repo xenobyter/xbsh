@@ -5,9 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/xenobyter/xbsh/term"
-
 	"github.com/awesome-gocui/gocui"
+	"github.com/xenobyter/xbsh/cfg"
 )
 
 type completionView struct {
@@ -58,9 +57,9 @@ func (i *completionView) layout(g *gocui.Gui) error {
 
 		for _, c := range i.completions {
 			if c.IsDir() {
-				out += term.AnsiUnderLine + c.Name() + term.AnsiNormal + "\n"
+				out += cfg.PathSep + c.Name() + "\n"
 			} else {
-				out += c.Name() + "\n"
+				out += " " + c.Name() + "\n"
 			}
 		}
 		fmt.Fprint(i.view, out)
@@ -75,7 +74,7 @@ func (i *completionView) layout(g *gocui.Gui) error {
 func (i *completionView) quit(g *gocui.Gui, v *gocui.View) error {
 	_, cy := v.Cursor()
 	_, oy := v.Origin()
-	i.line = v.BufferLines()[cy+oy]
+	i.line = v.BufferLines()[cy+oy][1:]
 	return gocui.ErrQuit
 }
 
