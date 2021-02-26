@@ -7,6 +7,7 @@ import (
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/xenobyter/xbsh/cfg"
+	"github.com/xenobyter/xbsh/term"
 )
 
 type completionView struct {
@@ -17,6 +18,7 @@ type completionView struct {
 
 //Completion opens the completion view if  more then one completion is found
 func Completion(completions []os.FileInfo) string {
+	term.SetStatus("| Esc: Exit | Tab: Exit | Enter: Complete")
 	v := newCompletionView("Completion", completions)
 	g, err := gocui.NewGui(gocui.OutputNormal, false)
 	if err != nil {
@@ -75,6 +77,7 @@ func (i *completionView) quit(g *gocui.Gui, v *gocui.View) error {
 	_, cy := v.Cursor()
 	_, oy := v.Origin()
 	i.line = v.BufferLines()[cy+oy][1:]
+	term.ClearStatus()
 	return gocui.ErrQuit
 }
 

@@ -14,6 +14,7 @@ import (
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/xenobyter/xbsh/db"
+	"github.com/xenobyter/xbsh/term"
 )
 
 type batchView struct {
@@ -23,6 +24,7 @@ type batchView struct {
 
 // Batch opens the rename view
 func Batch(string) string {
+	term.SetStatus("| ESC: Exit | F5: Exit | F6: Do Rename | Tab: Left<->Right")
 	v := newBatchView("Batch")
 	g, err := gocui.NewGui(gocui.OutputNormal, false)
 	if err != nil {
@@ -62,8 +64,10 @@ func (i *batchView) layout(g *gocui.Gui) error {
 
 		//read rules
 		rules := db.ReadBatchRules()
-		for _, rule := range rules {
-			fmt.Fprintln(i.lView, rule)
+		for id, rule := range rules {
+			if id<len(rules) && rule!="" {
+				fmt.Fprintln(i.lView, rule)
+			}
 		}
 
 		i.lView.SetCursor(0, 0)
@@ -136,6 +140,7 @@ func (i *batchView) tabSwitch(g *gocui.Gui, v *gocui.View) error {
 
 func (i *batchView) quit(g *gocui.Gui, v *gocui.View) error {
 	db.WriteBatchRules(i.lView.BufferLines())
+	term.ClearStatus()
 	return gocui.ErrQuit
 }
 

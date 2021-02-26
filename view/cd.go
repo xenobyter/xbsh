@@ -8,10 +8,12 @@ import (
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/xenobyter/xbsh/cfg"
+	"github.com/xenobyter/xbsh/term"
 )
 
 //CD displays a view
 func CD(path string) string {
+	term.SetStatus("| Esc: Exit | Tab: Exit | F3: Exit | Enter: Do cd")
 	v := newCDView(path)
 	g, err := gocui.NewGui(gocui.OutputNormal, false)
 	if err != nil {
@@ -95,6 +97,7 @@ func (i *cdView) keybindings(g *gocui.Gui) {
 }
 
 func (i *cdView) quit(g *gocui.Gui, v *gocui.View) error {
+	term.ClearStatus()
 	_, cy := v.Cursor()
 	_, oy := v.Origin()
 	i.line = i.path

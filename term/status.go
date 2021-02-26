@@ -9,6 +9,7 @@ import (
 var (
 	ws     *WinSize
 	ticker *time.Ticker
+	bar    string
 )
 
 //StatusLine displays the bottom line. It is intended to run
@@ -22,11 +23,11 @@ func StatusLine() {
 			return
 		case t := <-ticker.C:
 			ws, _ = GetWinsize()
-			bar := getStatusBarContent(t, ws.Col)
-			if bar == "" {
+			out := formatStatusBar(t, ws.Col)
+			if out == "" {
 				return
 			}
-			fmt.Printf(AnsiSave+"\033[%v;0H%v"+AnsiRestore, ws.Col,bar)
+			fmt.Printf(AnsiSave+"\033[%v;0H%v"+AnsiRestore, ws.Col, out)
 		}
 	}
 }
@@ -41,8 +42,17 @@ func RestartStatus() {
 	ticker.Reset(time.Second)
 }
 
-func getStatusBarContent(t time.Time, cLen uint16) string {
-	bar := "| F1: Help | F2: Hist | F3: cd | F4: Jobs | F5: Rename"
+//SetStatus takes a string as the new StatusBar
+func SetStatus(s string) {
+	bar = s
+}
+
+//ClearStatus sets the default StatusBar
+func ClearStatus() {
+	bar = "| F1: Help | F2: Hist | F3: cd | F4: Jobs | F5: Rename"
+}
+
+func formatStatusBar(t time.Time, cLen uint16) string {
 	date := t.Format("15:04:05") + " |"
 	fill := int(cLen) - len(bar) - len(date)
 	if fill < 0 {

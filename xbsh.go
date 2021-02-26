@@ -10,14 +10,14 @@ import (
 	"github.com/xenobyter/xbsh/term"
 )
 
-
 func main() {
 	go term.StatusLine()
 	go db.PathCache()
-	
+
 	//setup scroll region
 	ws, _ := term.GetWinsize()
 	fmt.Printf("\033[2J\033[0;%vr", ws.Row-1)
+	term.ClearStatus()
 	for {
 		p := line.Prompt()
 		line := line.Read(p)

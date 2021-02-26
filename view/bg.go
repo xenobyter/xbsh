@@ -16,6 +16,7 @@ type bgView struct {
 
 //BG opens the background jobs view
 func BG(string) string {
+	term.SetStatus("| ESC: Exit | F4: Exit | Enter: Exit | Del: Delete | Tab: Left<->Right")
 	v := newBgView("Jobs")
 	g, err := gocui.NewGui(gocui.OutputNormal, false)
 	if err != nil {

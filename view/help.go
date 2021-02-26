@@ -8,10 +8,12 @@ import (
 	"log"
 
 	"github.com/awesome-gocui/gocui"
+	"github.com/xenobyter/xbsh/term"
 )
 
 // Help displays a simple help text
 func Help(string) string {
+	term.SetStatus("| ESC: Exit | F1: Exit")
 	h := newHelpView("Help")
 	g, err := gocui.NewGui(gocui.OutputNormal, false)
 	if err != nil {
@@ -27,6 +29,7 @@ func Help(string) string {
 	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
 		log.Panicln(err)
 	}
+
 	return h.line
 }
 
@@ -40,7 +43,7 @@ func newHelpView(name string) *helpView {
 
 func (h *helpView) layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
-	if v, err := g.SetView(h.name, 0, 0, maxX-1, maxY-1, 0); err != nil {
+	if v, err := g.SetView(h.name, 0, 0, maxX-1, maxY-2, 0); err != nil {
 		if !gocui.IsUnknownView(err) {
 			return err
 		}
@@ -59,6 +62,7 @@ func (h *helpView) layout(g *gocui.Gui) error {
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
+	term.ClearStatus()
 	return gocui.ErrQuit
 }
 

@@ -49,11 +49,13 @@ func TestWriteRenameRules(t *testing.T) {
 	tests := []struct {
 		name    string
 		lines   []string
+		wantLines   []string
 		wantErr bool
 		oldRule string
 	}{
-		{"Overwrite all existing rules", []string{"rule1", "rule2"}, false, "rule0"},
-		{"Writing empty rules", nil, false, "rule0"},
+		{"Overwrite all existing rules", []string{"rule1", "rule2"}, []string{"rule1", "rule2"},false, "rule0"},
+		{"Writing empty rules", nil, nil, false, "rule0"},
+		{"Dont write empty lines at the end", []string{"rule1", "rule2", "\n"}, []string{"rule1", "rule2"}, false, "rule0"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -65,7 +67,7 @@ func TestWriteRenameRules(t *testing.T) {
 			}
 			rules := ReadBatchRules()
 			if !reflect.DeepEqual(tt.lines, rules) {
-				t.Errorf("WriteRenameRules() rules = %v, want %v", rules, tt.lines)
+				t.Errorf("WriteRenameRules() rules = %v, want %v", rules, tt.wantLines)
 			}
 		})
 	}

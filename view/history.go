@@ -7,6 +7,7 @@ import (
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/xenobyter/xbsh/db"
+	"github.com/xenobyter/xbsh/term"
 )
 
 const (
@@ -16,6 +17,7 @@ const (
 //History takes a string and uses it to search in db. It displays the filtered
 //results. One entry can be selected with Arrowkeys. Enter returns this entry
 func History(line string) string {
+	term.SetStatus("| Esc: Exit | F2: Exit | Enter: Use Entry | Type to refine search")
 	v := newHistoryView("History", line)
 	g, err := gocui.NewGui(gocui.OutputNormal, false)
 	if err != nil {
