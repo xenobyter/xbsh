@@ -21,10 +21,10 @@ var (
 
 // BgJob starts a new job and returns it's id
 func BgJob(args []string) int {
-	j := newBgJob(args)
-	jobList = append(jobList, j)
-	go j.start()
-	return len(jobList) - 1
+		j := newBgJob(args)
+		jobList = append(jobList, j)
+		go j.start()
+		return len(jobList) - 1
 }
 
 // BgList returns a list of all known jobs

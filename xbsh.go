@@ -8,6 +8,7 @@ import (
 	"github.com/xenobyter/xbsh/exec"
 	"github.com/xenobyter/xbsh/line"
 	"github.com/xenobyter/xbsh/term"
+	"github.com/xenobyter/xbsh/view"
 )
 
 func main() {
@@ -23,6 +24,8 @@ func main() {
 		line := line.Read(p)
 
 		switch line {
+		case "bg":
+			view.BG("")
 		case "exit":
 			os.Exit(0)
 		case "cls":

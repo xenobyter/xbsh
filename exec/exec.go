@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/xenobyter/xbsh/cfg"
@@ -167,8 +168,23 @@ func run(stdin, stdout, stderr *os.File, command string, args ...string) (err er
 	//handle the command
 	switch command {
 	case "bg":
-		j := BgJob(args)
-		fmt.Printf("background job %v started\n", j)
+		id, err := strconv.ParseInt(args[0], 10, 0)
+		switch {
+		case args[0] == "ls":
+			for i, j := range BgList() {
+				_, args, _, _, _ := BgGet(i)
+				fmt.Printf("%v: %v %v\n", i, j, strings.Join(args, " "))
+			}
+		case err == nil && id >= 0:
+			cmd, args, stdout, stderr, _ := BgGet(int(id))
+			fmt.Printf("%v ", cmd)
+			fmt.Println(strings.Join(args, " "))
+			fmt.Print(string(stdout))
+			fmt.Print(string(stderr))
+		default:
+			j := BgJob(args)
+			fmt.Printf("background job %v started\n", j)
+		}
 	case "cd":
 		err = changeDir(args)
 	default:
